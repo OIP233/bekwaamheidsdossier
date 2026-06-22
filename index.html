@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Live Scenario · Bekwaamheidsdossier</title>
+<style>
+:root {
+  --bg:#191e2a; --bg-deep:#0f131c; --panel:#2e3a50; --panel-sub:#243044;
+  --border:#3e5070; --border-hi:#6890b8;
+  --text:#e8f0f8; --text-dim:#a0bacc; --text-bright:#f8fcff; --text-muted:#60788e; --label:#b8d4e8;
+  --green:#28f076; --green-bg:#122e1e; --amber:#ffc840; --amber-bg:#2e1e06;
+  --red:#ff4438; --red-bg:#2e1010; --blue:#52c0f8; --blue-bg:#0c2240;
+  --cyan:#00e8ff; --cyan-bg:#082c3a; --purple:#a78bfa; --purple-bg:#2e1e4e;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --mono:"SF Mono",Menlo,Consolas,monospace;
+}
+* { box-sizing:border-box; }
+html,body { margin:0; padding:0; min-height:100%; background:var(--bg-deep); color:var(--text);
+  font-family:var(--sans); font-size:14px; line-height:1.5; }
+button { font-family:inherit; cursor:pointer; }
+h1,h2,h3 { margin:0; font-weight:600; color:var(--text-bright); }
+
+/* ── Topbar ── */
+#topbar { display:flex; align-items:center; gap:16px; padding:14px 22px;
+  background:var(--bg); border-bottom:1px solid var(--border); position:sticky; top:0; z-index:20; }
+#brand { display:flex; flex-direction:column; }
+#brand .t { font-size:16px; font-weight:700; color:var(--text-bright); letter-spacing:.2px; }
+#brand .s { font-size:11px; font-family:var(--mono); color:var(--cyan); text-transform:uppercase; letter-spacing:1px; }
+#topstats { font-family:var(--mono); font-size:12px; color:var(--text-dim); margin-left:8px; }
+#topbar .spacer { flex:1; }
+.btn { background:var(--panel); color:var(--text); border:1px solid var(--border);
+  border-radius:6px; padding:8px 14px; font-size:13px; transition:.12s; }
+.btn:hover { border-color:var(--cyan); color:var(--text-bright); }
+.btn.primary { background:var(--blue); color:var(--bg-deep); border-color:var(--blue); font-weight:600; }
+.btn.primary:hover { background:var(--cyan); border-color:var(--cyan); }
+.btn.ghost { background:transparent; }
+.btn.danger:hover { border-color:var(--red); color:var(--red); }
+
+/* ── Tabs ── */
+#tabs { display:flex; gap:6px; padding:12px 22px 0; background:var(--bg); }
+.tab { background:transparent; color:var(--text-dim); border:1px solid transparent; border-bottom:none;
+  border-radius:8px 8px 0 0; padding:10px 18px; font-size:13px; font-weight:600; }
+.tab.active { background:var(--bg-deep); color:var(--cyan); border-color:var(--border); }
+.tab:hover:not(.active) { color:var(--text-bright); }
+
+/* ── Layout ── */
+#main { padding:22px; max-width:1280px; margin:0 auto; }
+.hidden { display:none !important; }
+
+/* ── Empty / import ── */
+#empty { text-align:center; padding:70px 20px; }
+#drop { max-width:560px; margin:24px auto 0; border:2px dashed var(--border-hi); border-radius:14px;
+  padding:46px 24px; background:var(--panel-sub); transition:.15s; }
+#drop.over { border-color:var(--cyan); background:var(--cyan-bg); }
+#drop .ico { font-size:42px; }
+#drop h3 { margin:10px 0 6px; font-size:18px; }
+#drop p { color:var(--text-dim); margin:4px 0; font-size:13px; }
+.empty-hint { color:var(--text-muted); font-family:var(--mono); font-size:11px; margin-top:18px; }
+
+/* ── Cards / panels ── */
+.panel { background:var(--panel-sub); border:1px solid var(--border); border-radius:12px; padding:18px 20px; margin-bottom:18px; }
+.panel > h2 { font-size:14px; text-transform:uppercase; letter-spacing:.6px; color:var(--label);
+  margin-bottom:14px; font-family:var(--mono); font-weight:600; }
+.row { display:flex; gap:18px; flex-wrap:wrap; }
+.col { flex:1; min-width:0; }
+
+/* ── KPI cards ── */
+.kpis { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:14px; }
+.kpi { background:var(--panel); border:1px solid var(--border); border-radius:10px; padding:14px 16px; }
+.kpi .v { font-size:26px; font-weight:700; color:var(--text-bright); line-height:1.1; }
+.kpi .l { font-size:11px; color:var(--text-dim); text-transform:uppercase; letter-spacing:.5px; font-family:var(--mono); margin-top:4px; }
+.kpi .sub { font-size:11px; color:var(--text-muted); margin-top:2px; }
+
+/* ── Behaviour chips ── */
+.chip { display:inline-flex; align-items:center; gap:6px; padding:3px 10px; border-radius:20px;
+  font-size:11px; font-weight:700; font-family:var(--mono); letter-spacing:.3px; }
+.chip.reactive    { background:var(--red-bg);   color:var(--red);   border:1px solid var(--red); }
+.chip.aware       { background:var(--amber-bg); color:var(--amber); border:1px solid var(--amber); }
+.chip.proactive   { background:var(--blue-bg);  color:var(--blue);  border:1px solid var(--blue); }
+.chip.in-control  { background:var(--green-bg); color:var(--green); border:1px solid var(--green); }
+.chip.muted       { background:var(--panel);    color:var(--text-muted); border:1px solid var(--border); }
+.vbadge { display:inline-block; padding:2px 8px; border-radius:5px; font-size:10px; font-family:var(--mono);
+  font-weight:700; letter-spacing:.5px; background:var(--panel); color:var(--text-dim); border:1px solid var(--border); }
+.vbadge.cro { color:var(--cyan); border-color:var(--cyan); }
+.vbadge.field { color:var(--green); border-color:var(--green); }
+.vbadge.technical { color:var(--purple); border-color:var(--purple); }
+
+/* ── Person list ── */
+#ind-layout { display:grid; grid-template-columns:300px 1fr; gap:18px; align-items:start; }
+#person-search { width:100%; background:var(--panel); border:1px solid var(--border); color:var(--text);
+  border-radius:6px; padding:8px 10px; font-size:13px; margin-bottom:10px; }
+.person-item { padding:10px 12px; border:1px solid var(--border); border-radius:8px; margin-bottom:8px;
+  background:var(--panel); transition:.12s; }
+.person-item:hover { border-color:var(--border-hi); }
+.person-item.sel { border-color:var(--cyan); background:var(--cyan-bg); }
+.person-item .nm { font-weight:600; color:var(--text-bright); }
+.person-item .meta { font-size:11px; color:var(--text-dim); font-family:var(--mono); margin-top:3px;
+  display:flex; justify-content:space-between; align-items:center; gap:8px; }
+
+/* ── Tables ── */
+table.data { width:100%; border-collapse:collapse; font-size:12.5px; }
+table.data th { text-align:left; color:var(--label); font-family:var(--mono); font-size:11px;
+  text-transform:uppercase; letter-spacing:.4px; padding:8px 10px; border-bottom:1px solid var(--border); white-space:nowrap; }
+table.data td { padding:8px 10px; border-bottom:1px solid var(--panel); color:var(--text); }
+table.data tr:hover td { background:var(--panel); }
+.num { font-family:var(--mono); text-align:right; }
+.dim { color:var(--text-muted); }
+
+/* ── Dimension bars ── */
+.dimbar-wrap { display:flex; align-items:center; gap:12px; margin:9px 0; }
+.dimbar-lbl { width:170px; font-size:12.5px; color:var(--text-dim); flex-shrink:0; }
+.dimbar-track { flex:1; height:18px; background:var(--panel); border-radius:5px; overflow:hidden; border:1px solid var(--border); }
+.dimbar-fill { height:100%; border-radius:4px 0 0 4px; transition:width .3s; }
+.dimbar-val { width:62px; text-align:right; font-family:var(--mono); font-size:12px; color:var(--text-bright); flex-shrink:0; }
+.dimbar-delta { width:42px; font-family:var(--mono); font-size:11px; flex-shrink:0; }
+
+.weak-flag { margin-top:12px; padding:10px 14px; border-radius:8px; background:var(--amber-bg);
+  border:1px solid var(--amber); border-left:3px solid var(--amber); color:var(--amber); font-size:12.5px; }
+
+.filters { display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end; }
+.filters .f { display:flex; flex-direction:column; gap:4px; }
+.filters label { font-size:10px; text-transform:uppercase; letter-spacing:.5px; color:var(--text-muted); font-family:var(--mono); }
+.filters select, .filters input { background:var(--panel); border:1px solid var(--border); color:var(--text);
+  border-radius:6px; padding:7px 9px; font-size:12.5px; min-width:130px; }
+
+svg text { font-family:var(--mono); }
+.legend { display:flex; gap:14px; flex-wrap:wrap; font-size:11px; font-family:var(--mono); color:var(--text-dim); margin-top:8px; }
+.legend i { display:inline-block; width:10px; height:10px; border-radius:2px; margin-right:5px; vertical-align:middle; }
+.muted-note { color:var(--text-muted); font-size:12px; font-style:italic; }
+.export-bar { display:flex; gap:10px; justify-content:flex-end; margin-top:6px; }
+</style>
+</head>
+<body>
+
+<div id="topbar">
+  <div id="brand">
+    <span class="t">Bekwaamheidsdossier</span>
+    <span class="s">Live Scenario · run-registratie</span>
+  </div>
+  <span id="topstats"></span>
+  <div class="spacer"></div>
+  <button class="btn primary" onclick="pickFiles()">＋ Importeer runs</button>
+  <button class="btn ghost" onclick="loadFromCache()" title="Lees runs uit de lokale opslag van deze browser/machine">⟳ Lokale cache</button>
+  <button class="btn ghost danger" onclick="clearAll()">Wis alles</button>
+  <input type="file" id="file-input" accept=".json,.lsrun,.lsrun.json,application/json" multiple class="hidden">
+</div>
+
+<div id="tabs" class="hidden">
+  <button class="tab active" id="tab-ind" onclick="setView('individual')">Individueel dossier</button>
+  <button class="tab" id="tab-coh" onclick="setView('cohort')">Cohort-dashboard</button>
+</div>
+
+<div id="main">
+
+  <!-- EMPTY STATE -->
+  <div id="empty">
+    <h1 style="font-size:22px">Van cursus gevolgd naar bekwaamheid aangetoond</h1>
+    <p style="color:var(--text-dim);max-width:620px;margin:10px auto 0">
+      Importeer de <b>run-records</b> (<code>.lsrun.json</code>) die de Live Scenario players bij elke voltooide
+      run aanmaken. Dit dossier toont per persoon de ontwikkeling over de tijd en aggregeert tot een cohort-overzicht.</p>
+    <div id="drop">
+      <div class="ico">🗂</div>
+      <h3>Sleep run-records hierheen</h3>
+      <p>of <button class="btn primary" style="margin-top:6px" onclick="pickFiles()">kies bestanden</button></p>
+      <p class="empty-hint">Accepteert losse <code>.lsrun.json</code>-bestanden of een gebundeld export-bestand.<br>
+      Alle verwerking gebeurt lokaal in je browser — er wordt niets verstuurd.</p>
+    </div>
+  </div>
+
+  <!-- INDIVIDUAL VIEW -->
+  <div id="view-individual" class="hidden">
+    <div id="ind-layout">
+      <div>
+        <input id="person-search" placeholder="Zoek deelnemer…" oninput="renderPersonList()">
+        <div id="person-list"></div>
+      </div>
+      <div id="person-detail"><p class="muted-note">Kies links een deelnemer.</p></div>
+    </div>
+  </div>
+
+  <!-- COHORT VIEW -->
+  <div id="view-cohort" class="hidden">
+    <div class="panel">
+      <h2>Filters</h2>
+      <div class="filters" id="cohort-filters">
+        <div class="f"><label>Organisatie</label><select id="f-org" onchange="renderCohort()"></select></div>
+        <div class="f"><label>Variant</label><select id="f-variant" onchange="renderCohort()"></select></div>
+        <div class="f"><label>Scenario</label><select id="f-scenario" onchange="renderCohort()"></select></div>
+        <div class="f"><label>Vanaf</label><input type="date" id="f-from" onchange="renderCohort()"></div>
+        <div class="f"><label>Tot</label><input type="date" id="f-to" onchange="renderCohort()"></div>
+        <button class="btn ghost" onclick="resetFilters()">Reset</button>
+      </div>
+    </div>
+    <div id="cohort-body"></div>
+  </div>
+
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════
+   Live Scenario · Bekwaamheidsdossier (WP4)
+   Aggregeert canonieke run-records (schema 'livescenario-run' v1)
+   uit de CRO/Field/Technical players → individueel dossier-over-tijd
+   + cohort-dashboard. Volledig client-side; geen netwerk vereist.
+═══════════════════════════════════════════════════════════════ */
+
+const STORE_KEY = 'oip_run_records';
+const STATE = { records: [], view: 'individual', selectedPersonKey: null };
+
+/* ── Canonieke gedragslabels & competentie-dimensies ── */
+const BEHAV = {
+  'reactive':   { label:'Reactief',  color:'var(--red)',   rank:1 },
+  'aware':      { label:'Bewust',    color:'var(--amber)', rank:2 },
+  'proactive':  { label:'Proactief', color:'var(--blue)',  rank:3 },
+  'in-control': { label:'In Control',color:'var(--green)', rank:4 },
+};
+const BEHAV_ORDER = ['reactive','aware','proactive','in-control'];
+
+const DIMENSIONS = [
+  { key:'situational',   label:'Situatiebewustzijn',  match:['situat','aware','bewust'] },
+  { key:'communication', label:'Communicatie',        match:['commun','kommun'] },
+  { key:'prioritisation',label:'Prioriteitstelling',  match:['prior'] },
+  { key:'procedure',     label:'Procedure-opvolging',  match:['proced','verfahren'] },
+  { key:'safe',          label:'Veilig werken',        match:['veilig','safe','sicher','werken'] },
+];
+function canonDim(name){
+  const n = (name||'').toLowerCase();
+  for (const d of DIMENSIONS){ if (d.match.some(m => n.includes(m))) return d.key; }
+  return null;
+}
+const VARIANTS = { cro:'Controlekamer', field:'Veldoperator', technical:'Technical' };
+
+/* ── Helpers ── */
+function $(id){ return document.getElementById(id); }
+function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function behavOf(rec){
+  const a = rec.assessment;
+  if (a && a.behaviourLabel && BEHAV[a.behaviourLabel]) return a.behaviourLabel;
+  const s = a && typeof a.score==='number' ? a.score : null;
+  if (s==null) return null;
+  return s<=3?'reactive':s<=5?'aware':s<=7?'proactive':'in-control';
+}
+function scoreOf(rec){ return (rec.assessment && typeof rec.assessment.score==='number') ? rec.assessment.score : null; }
+function dateOf(rec){ return rec.completedAt || (rec.run && rec.run.endedAt) || null; }
+function ts(rec){ const d = dateOf(rec); const t = d ? Date.parse(d) : NaN; return isNaN(t)?0:t; }
+function fmtDate(iso){ if(!iso) return '—'; const t=Date.parse(iso); if(isNaN(t)) return '—';
+  return new Date(t).toLocaleDateString('nl-NL',{day:'2-digit',month:'short',year:'numeric'}); }
+function fmtDur(sec){ if(sec==null) return '—'; const m=Math.floor(sec/60), s=sec%60;
+  return String(m).padStart(2,'0')+':'+String(s).padStart(2,'0'); }
+function personKey(rec){ const p=rec.participant||{}; return ((p.name||'?').trim()+'|'+(p.org||'').trim()).toLowerCase(); }
+function avg(arr){ const v=arr.filter(x=>typeof x==='number'); return v.length? v.reduce((a,b)=>a+b,0)/v.length : null; }
+function round1(x){ return x==null?null:Math.round(x*10)/10; }
+function dimColor(v){ if(v==null) return 'var(--text-muted)'; return v<2.5?'var(--red)':v<3.5?'var(--amber)':v<4.5?'var(--blue)':'var(--green)'; }
+
+/* ── Import ── */
+function pickFiles(){ $('file-input').click(); }
+$('file-input').addEventListener('change', e => { handleFiles(e.target.files); e.target.value=''; });
+
+function extractRecords(parsed){
+  let arr = [];
+  if (Array.isArray(parsed)) arr = parsed;
+  else if (parsed && Array.isArray(parsed.records)) arr = parsed.records;
+  else if (parsed && typeof parsed==='object') arr = [parsed];
+  return arr.filter(r => r && typeof r==='object' &&
+    typeof r.recordFormat==='string' && r.recordFormat.indexOf('livescenario-run')===0);
+}
+function addRecords(recs){
+  const seen = new Set(STATE.records.map(r=>r.runId));
+  let added=0;
+  recs.forEach(r=>{
+    const id = r.runId || (r.runId = (r.variant||'x')+'-'+ts(r)+'-'+Math.random().toString().slice(2,6));
+    if (!seen.has(id)){ STATE.records.push(r); seen.add(id); added++; }
+  });
+  STATE.records.sort((a,b)=>ts(a)-ts(b));
+  return added;
+}
+function handleFiles(fileList){
+  const files = Array.from(fileList||[]);
+  if (!files.length) return;
+  let pending = files.length, totalAdded=0, totalSkipped=0, errs=0;
+  files.forEach(f=>{
+    const r = new FileReader();
+    r.onload = () => {
+      try {
+        const recs = extractRecords(JSON.parse(r.result));
+        const before = STATE.records.length;
+        const added = addRecords(recs);
+        totalAdded += added; totalSkipped += (recs.length - added);
+      } catch(e){ errs++; console.warn('Import-fout in', f.name, e); }
+      if (--pending===0) finishImport(totalAdded, totalSkipped, errs);
+    };
+    r.onerror = () => { errs++; if(--pending===0) finishImport(totalAdded, totalSkipped, errs); };
+    r.readAsText(f);
+  });
+}
+function finishImport(added, skipped, errs){
+  let msg = `${added} run-record(s) toegevoegd`;
+  if (skipped) msg += `, ${skipped} duplicaat/ongeldig overgeslagen`;
+  if (errs) msg += `, ${errs} bestand(en) konden niet gelezen worden`;
+  flash(msg, errs?'amber':'green');
+  refreshAll();
+}
+function loadFromCache(){
+  try {
+    const raw = localStorage.getItem(STORE_KEY);
+    if (!raw){ flash('Geen lokale cache gevonden op deze machine.', 'amber'); return; }
+    const recs = extractRecords(JSON.parse(raw));
+    const added = addRecords(recs);
+    flash(`${added} run-record(s) uit lokale cache geladen.`, added?'green':'amber');
+    refreshAll();
+  } catch(e){ flash('Lokale cache kon niet gelezen worden.', 'red'); }
+}
+function clearAll(){
+  if (!STATE.records.length) return;
+  if (!confirm('Alle geïmporteerde runs uit dit overzicht verwijderen?\n(De brondata/bestanden blijven bestaan.)')) return;
+  STATE.records = []; STATE.selectedPersonKey = null; refreshAll();
+}
+
+/* ── Drag & drop ── */
+const drop = $('drop');
+['dragenter','dragover'].forEach(ev=>document.addEventListener(ev, e=>{ e.preventDefault();
+  if (drop) drop.classList.add('over'); }));
+['dragleave','drop'].forEach(ev=>document.addEventListener(ev, e=>{ e.preventDefault();
+  if (ev==='dragleave' && e.relatedTarget) return; if (drop) drop.classList.remove('over'); }));
+document.addEventListener('drop', e=>{ if (e.dataTransfer && e.dataTransfer.files.length) handleFiles(e.dataTransfer.files); });
+
+/* ── Toast ── */
+let flashT=null;
+function flash(msg, kind){
+  let el = $('toast');
+  if (!el){ el=document.createElement('div'); el.id='toast'; document.body.appendChild(el);
+    el.style.cssText='position:fixed;bottom:22px;left:50%;transform:translateX(-50%);z-index:50;'+
+    'padding:11px 18px;border-radius:8px;font-size:13px;font-family:var(--mono);box-shadow:0 6px 22px rgba(0,0,0,.5)'; }
+  const c = kind==='red'?'--red':kind==='amber'?'--amber':'--green';
+  el.style.background='var(--panel)'; el.style.border=`1px solid var(${c})`; el.style.color=`var(${c})`;
+  el.textContent=msg; el.style.opacity='1';
+  clearTimeout(flashT); flashT=setTimeout(()=>{ el.style.transition='opacity .4s'; el.style.opacity='0'; }, 3600);
+}
+
+/* ── Top-level render orchestration ── */
+function refreshAll(){
+  const has = STATE.records.length>0;
+  $('empty').classList.toggle('hidden', has);
+  $('tabs').classList.toggle('hidden', !has);
+  $('view-individual').classList.toggle('hidden', !has || STATE.view!=='individual');
+  $('view-cohort').classList.toggle('hidden', !has || STATE.view!=='cohort');
+  updateTopStats();
+  if (!has) return;
+  if (STATE.view==='individual'){ renderPersonList(); renderPersonDetail(); }
+  else { buildFilterOptions(); renderCohort(); }
+}
+function updateTopStats(){
+  const recs = STATE.records;
+  const people = new Set(recs.map(personKey));
+  const scen = new Set(recs.map(r=>r.scenario && r.scenario.id).filter(Boolean));
+  $('topstats').textContent = recs.length
+    ? `${recs.length} runs · ${people.size} deelnemers · ${scen.size} scenario's`
+    : '';
+}
+function setView(v){
+  STATE.view=v;
+  $('tab-ind').classList.toggle('active', v==='individual');
+  $('tab-coh').classList.toggle('active', v==='cohort');
+  refreshAll();
+}
+
+/* ═══════════ INDIVIDUEEL DOSSIER ═══════════ */
+function peopleIndex(){
+  const map = new Map();
+  STATE.records.forEach(r=>{
+    const k = personKey(r);
+    if (!map.has(k)) map.set(k, { key:k, name:(r.participant&&r.participant.name)||'(naamloos)',
+      role:(r.participant&&r.participant.role)||'', org:(r.participant&&r.participant.org)||'', runs:[] });
+    map.get(k).runs.push(r);
+  });
+  const list = [...map.values()];
+  list.forEach(p=>p.runs.sort((a,b)=>ts(a)-ts(b)));
+  list.sort((a,b)=>a.name.localeCompare(b.name,'nl'));
+  return list;
+}
+function renderPersonList(){
+  const q = ($('person-search').value||'').toLowerCase().trim();
+  const people = peopleIndex().filter(p=> !q || p.name.toLowerCase().includes(q) || p.org.toLowerCase().includes(q));
+  if (!STATE.selectedPersonKey && people.length) STATE.selectedPersonKey = people[0].key;
+  $('person-list').innerHTML = people.map(p=>{
+    const last = p.runs[p.runs.length-1];
+    const b = behavOf(last);
+    const chip = b ? `<span class="chip ${b}">${BEHAV[b].label}</span>` : '<span class="chip muted">—</span>';
+    return `<div class="person-item ${p.key===STATE.selectedPersonKey?'sel':''}" onclick="selectPerson('${esc(p.key).replace(/'/g,"\\'")}')">
+      <div class="nm">${esc(p.name)}</div>
+      <div class="meta"><span>${esc([p.role,p.org].filter(Boolean).join(' · ')||'—')}</span></div>
+      <div class="meta"><span>${p.runs.length} run${p.runs.length!==1?'s':''}</span>${chip}</div>
+    </div>`;
+  }).join('') || '<p class="muted-note">Geen deelnemer gevonden.</p>';
+}
+function selectPerson(k){ STATE.selectedPersonKey=k; renderPersonList(); renderPersonDetail(); }
+
+function personDimSeries(runs){
+  // per dimensie: array van {date, val} (alleen runs waar de dimensie aanwezig is)
+  const out = {};
+  DIMENSIONS.forEach(d=>out[d.key]=[]);
+  runs.forEach(r=>{
+    const comps = (r.assessment && r.assessment.competencies) || [];
+    comps.forEach(c=>{ const k=canonDim(c.name); if(k && typeof c.score==='number') out[k].push({ t:ts(r), val:c.score }); });
+  });
+  Object.values(out).forEach(a=>a.sort((x,y)=>x.t-y.t));
+  return out;
+}
+function renderPersonDetail(){
+  const people = peopleIndex();
+  const p = people.find(x=>x.key===STATE.selectedPersonKey) || people[0];
+  if (!p){ $('person-detail').innerHTML='<p class="muted-note">Geen data.</p>'; return; }
+  const runs = p.runs;
+  const last = runs[runs.length-1];
+  const bl = behavOf(last);
+  const scores = runs.map(scoreOf).filter(x=>x!=null);
+  const avgScore = round1(avg(scores));
+  const period = `${fmtDate(dateOf(runs[0]))} – ${fmtDate(dateOf(last))}`;
+  const holdPts = runs.filter(r=>r.run && r.run.endReason && r.run.endReason!=='completed').length;
+
+  // Score-verloop chart
+  const chart = lineChart(runs.map(r=>({ t:ts(r), v:scoreOf(r), label:fmtDate(dateOf(r)) })));
+
+  // Gedragsevolutie-strip
+  const strip = runs.map(r=>{ const b=behavOf(r);
+    return `<span class="chip ${b||'muted'}" title="${esc(fmtDate(dateOf(r)))}">${b?BEHAV[b].label:'—'}</span>`; }).join(' ');
+
+  // Competentie-dimensies (gemiddelde + delta laatste vs eerste)
+  const series = personDimSeries(runs);
+  const dimRows = DIMENSIONS.map(d=>{
+    const s = series[d.key];
+    if (!s.length) return '';
+    const av = avg(s.map(x=>x.val));
+    const first = s[0].val, lastV = s[s.length-1].val;
+    const delta = s.length>1 ? lastV-first : 0;
+    const deltaTxt = s.length>1 ? (delta>0?`<span style="color:var(--green)">▲${round1(delta)}</span>`
+      : delta<0?`<span style="color:var(--red)">▼${round1(Math.abs(delta))}</span>` : '<span class="dim">—</span>') : '';
+    return `<div class="dimbar-wrap">
+      <div class="dimbar-lbl">${d.label}</div>
+      <div class="dimbar-track"><div class="dimbar-fill" style="width:${(av/5*100).toFixed(0)}%;background:${dimColor(av)}"></div></div>
+      <div class="dimbar-val">${round1(av)} / 5</div>
+      <div class="dimbar-delta">${deltaTxt}</div>
+    </div>`;
+  }).filter(Boolean).join('');
+
+  // Runs-tabel
+  const rows = runs.slice().reverse().map(r=>{
+    const b=behavOf(r); const v=r.variant||''; const sc=scoreOf(r);
+    const out = (r.run&&r.run.endReason&&r.run.endReason!=='completed')
+      ? `<span style="color:var(--amber)">hold-point</span>` : 'voltooid';
+    return `<tr>
+      <td>${fmtDate(dateOf(r))}</td>
+      <td><span class="vbadge ${v}">${VARIANTS[v]||v||'—'}</span></td>
+      <td>${esc((r.scenario&&r.scenario.title)||(r.scenario&&r.scenario.id)||'—')}</td>
+      <td class="num">${fmtDur(r.run&&r.run.durationSec)}</td>
+      <td>${out}</td>
+      <td class="num">${sc!=null?sc+'/10':'—'}</td>
+      <td>${b?`<span class="chip ${b}">${BEHAV[b].label}</span>`:'—'}</td>
+    </tr>`;
+  }).join('');
+
+  $('person-detail').innerHTML = `
+    <div class="panel">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px">
+        <div>
+          <h2 style="margin-bottom:4px;font-size:18px;text-transform:none;font-family:var(--sans);color:var(--text-bright)">${esc(p.name)}</h2>
+          <div style="font-family:var(--mono);font-size:12px;color:var(--text-dim)">${esc([p.role,p.org].filter(Boolean).join(' · ')||'—')}</div>
+        </div>
+        <div style="text-align:right">
+          ${bl?`<span class="chip ${bl}">${BEHAV[bl].label}</span>`:''}
+          <div style="font-family:var(--mono);font-size:11px;color:var(--text-muted);margin-top:6px">huidig niveau</div>
+        </div>
+      </div>
+      <div class="kpis" style="margin-top:16px">
+        <div class="kpi"><div class="v">${runs.length}</div><div class="l">Runs</div><div class="sub">${esc(period)}</div></div>
+        <div class="kpi"><div class="v">${avgScore!=null?avgScore:'—'}</div><div class="l">Gem. score</div><div class="sub">laatste: ${scoreOf(last)!=null?scoreOf(last)+'/10':'—'}</div></div>
+        <div class="kpi"><div class="v">${holdPts}</div><div class="l">Hold-points</div><div class="sub">vroegtijdig gestopt</div></div>
+        <div class="kpi"><div class="v">${new Set(runs.map(r=>r.scenario&&r.scenario.id).filter(Boolean)).size}</div><div class="l">Scenario's</div><div class="sub">verschillende</div></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Scoreverloop (1–10)</h2>
+      ${chart}
+      <div class="legend">
+        <span><i style="background:var(--red)"></i>Reactief 1–3</span>
+        <span><i style="background:var(--amber)"></i>Bewust 4–5</span>
+        <span><i style="background:var(--blue)"></i>Proactief 6–7</span>
+        <span><i style="background:var(--green)"></i>In Control 8–10</span>
+      </div>
+      <div style="margin-top:14px"><div style="font-family:var(--mono);font-size:11px;color:var(--label);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Gedragsevolutie</div>${strip}</div>
+    </div>
+
+    <div class="panel">
+      <h2>Competentie-ontwikkeling</h2>
+      ${dimRows || '<p class="muted-note">Geen competentie-scores in deze runs.</p>'}
+    </div>
+
+    ${disciplinePanel(runs, 'Prioritering & discipline')}
+
+    <div class="panel">
+      <h2>Runs (${runs.length})</h2>
+      <table class="data"><thead><tr>
+        <th>Datum</th><th>Variant</th><th>Scenario</th><th>Duur</th><th>Uitkomst</th><th>Score</th><th>Niveau</th>
+      </tr></thead><tbody>${rows}</tbody></table>
+      <div class="export-bar">
+        <button class="btn" onclick="exportPersonPDF()">⬇ PDF-dossier</button>
+        <button class="btn" onclick="exportPersonExcel()">⬇ Excel</button>
+      </div>
+    </div>`;
+}
+
+/* ── Inline SVG line chart (score 1-10 over tijd) ── */
+function lineChart(points){
+  const pts = points.filter(p=>p.v!=null);
+  const W=720, H=240, padL=34, padR=14, padT=14, padB=40;
+  const iw=W-padL-padR, ih=H-padT-padB;
+  // behaviour-banden
+  const band=(lo,hi,col)=>{ const y1=padT+ih*(1-(hi)/10), y2=padT+ih*(1-(lo-1)/10);
+    return `<rect x="${padL}" y="${y1.toFixed(1)}" width="${iw}" height="${(y2-y1).toFixed(1)}" fill="${col}" opacity="0.06"/>`; };
+  let bands = band(1,3,'#ff4438')+band(4,5,'#ffc840')+band(6,7,'#52c0f8')+band(8,10,'#28f076');
+  // gridlines + y-as labels
+  let grid='';
+  for (let s=0;s<=10;s+=2){ const y=padT+ih*(1-s/10);
+    grid+=`<line x1="${padL}" y1="${y.toFixed(1)}" x2="${W-padR}" y2="${y.toFixed(1)}" stroke="#3e5070" stroke-width="0.5"/>`;
+    grid+=`<text x="${padL-6}" y="${(y+3).toFixed(1)}" fill="#60788e" font-size="9" text-anchor="end">${s}</text>`; }
+  if (!pts.length) return `<svg viewBox="0 0 ${W} ${H}" width="100%">${bands}${grid}<text x="${W/2}" y="${H/2}" fill="#60788e" font-size="11" text-anchor="middle">geen scores</text></svg>`;
+  const n=pts.length;
+  const xOf=i=> n===1 ? padL+iw/2 : padL + iw*(i/(n-1));
+  const yOf=v=> padT + ih*(1-(v)/10);
+  let path='', dots='', xlabels='';
+  pts.forEach((p,i)=>{ const x=xOf(i), y=yOf(p.v);
+    path += (i===0?'M':'L')+x.toFixed(1)+' '+y.toFixed(1)+' ';
+    dots += `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="4" fill="#00e8ff" stroke="#0f131c" stroke-width="1.5"><title>${esc(p.label)}: ${p.v}/10</title></circle>`;
+    if (n<=8 || i===0 || i===n-1 || i%Math.ceil(n/8)===0)
+      xlabels += `<text x="${x.toFixed(1)}" y="${H-padB+16}" fill="#60788e" font-size="8.5" text-anchor="middle">${esc(p.label)}</text>`;
+  });
+  return `<svg viewBox="0 0 ${W} ${H}" width="100%">${bands}${grid}
+    <path d="${path}" fill="none" stroke="#00e8ff" stroke-width="2" stroke-linejoin="round"/>${dots}${xlabels}</svg>`;
+}
+
+/* ═══════════ COHORT-DASHBOARD ═══════════ */
+function buildFilterOptions(){
+  const recs = STATE.records;
+  const fill = (id, vals, labeler) => {
+    const sel = $(id); const cur = sel.value;
+    const opts = ['<option value="">Alle</option>'].concat(
+      [...new Set(vals)].filter(Boolean).sort().map(v=>`<option value="${esc(v)}">${esc(labeler?labeler(v):v)}</option>`));
+    sel.innerHTML = opts.join(''); if ([...sel.options].some(o=>o.value===cur)) sel.value=cur;
+  };
+  fill('f-org', recs.map(r=>r.participant&&r.participant.org));
+  fill('f-variant', recs.map(r=>r.variant), v=>VARIANTS[v]||v);
+  fill('f-scenario', recs.map(r=>r.scenario&&(r.scenario.title||r.scenario.id)));
+}
+function resetFilters(){ ['f-org','f-variant','f-scenario'].forEach(id=>$(id).value=''); $('f-from').value=''; $('f-to').value=''; renderCohort(); }
+function filteredRecords(){
+  const org=$('f-org').value, va=$('f-variant').value, sc=$('f-scenario').value;
+  const from=$('f-from').value?Date.parse($('f-from').value):null;
+  const to=$('f-to').value?Date.parse($('f-to').value)+86400000:null;
+  return STATE.records.filter(r=>{
+    if (org && (r.participant&&r.participant.org)!==org) return false;
+    if (va && r.variant!==va) return false;
+    if (sc && (r.scenario&&(r.scenario.title||r.scenario.id))!==sc) return false;
+    const t=ts(r); if (from && t<from) return false; if (to && t>=to) return false;
+    return true;
+  });
+}
+function renderCohort(){
+  const recs = filteredRecords();
+  const body = $('cohort-body');
+  if (!recs.length){ body.innerHTML='<div class="panel"><p class="muted-note">Geen runs binnen deze filters.</p></div>'; return; }
+  const people = new Set(recs.map(personKey));
+  const scores = recs.map(scoreOf).filter(x=>x!=null);
+  const holdPts = recs.filter(r=>r.run&&r.run.endReason&&r.run.endReason!=='completed').length;
+  const normRuns = recs.filter(r=>r.run&&typeof r.run.withinNorm==='boolean');
+  const withinNorm = normRuns.filter(r=>r.run.withinNorm).length;
+
+  // Behaviour-verdeling
+  const bc={reactive:0,aware:0,proactive:0,'in-control':0,none:0};
+  recs.forEach(r=>{ const b=behavOf(r); bc[b||'none']++; });
+
+  // Competentie-gemiddelden
+  const dimVals={}; DIMENSIONS.forEach(d=>dimVals[d.key]=[]);
+  recs.forEach(r=>{ ((r.assessment&&r.assessment.competencies)||[]).forEach(c=>{
+    const k=canonDim(c.name); if(k&&typeof c.score==='number') dimVals[k].push(c.score); }); });
+  const dimAvg = DIMENSIONS.map(d=>({ ...d, av:avg(dimVals[d.key]), n:dimVals[d.key].length })).filter(d=>d.n>0);
+  const weakest = dimAvg.slice().sort((a,b)=>a.av-b.av)[0];
+
+  const kpis = `<div class="panel"><h2>Kerncijfers</h2><div class="kpis">
+    <div class="kpi"><div class="v">${recs.length}</div><div class="l">Runs</div></div>
+    <div class="kpi"><div class="v">${people.size}</div><div class="l">Deelnemers</div></div>
+    <div class="kpi"><div class="v">${round1(avg(scores))??'—'}</div><div class="l">Gem. score</div><div class="sub">van 10</div></div>
+    <div class="kpi"><div class="v">${holdPts}</div><div class="l">Hold-points</div><div class="sub">${(holdPts/recs.length*100).toFixed(0)}% van runs</div></div>
+    <div class="kpi"><div class="v">${normRuns.length?Math.round(withinNorm/normRuns.length*100)+'%':'—'}</div><div class="l">Binnen norm</div><div class="sub">${normRuns.length} runs gemeten</div></div>
+  </div></div>`;
+
+  // Behaviour bar
+  const total=recs.length;
+  const seg = BEHAV_ORDER.map(b=> bc[b]?`<div title="${BEHAV[b].label}: ${bc[b]}" style="width:${(bc[b]/total*100).toFixed(1)}%;background:${BEHAV[b].color};opacity:.85"></div>`:'').join('')
+    + (bc.none?`<div title="Onbekend: ${bc.none}" style="width:${(bc.none/total*100).toFixed(1)}%;background:var(--text-muted);opacity:.5"></div>`:'');
+  const behavPanel = `<div class="panel"><h2>Gedragsniveau-verdeling</h2>
+    <div style="display:flex;height:26px;border-radius:6px;overflow:hidden;border:1px solid var(--border)">${seg}</div>
+    <div class="legend">${BEHAV_ORDER.map(b=>`<span><i style="background:${BEHAV[b].color}"></i>${BEHAV[b].label} ${bc[b]}</span>`).join('')}${bc.none?`<span><i style="background:var(--text-muted)"></i>Onbekend ${bc.none}</span>`:''}</div></div>`;
+
+  // Competentie-gemiddelden
+  const dimPanel = `<div class="panel"><h2>Competentie-gemiddelden (1–5)</h2>
+    ${dimAvg.length? dimAvg.map(d=>`<div class="dimbar-wrap">
+      <div class="dimbar-lbl">${d.label}</div>
+      <div class="dimbar-track"><div class="dimbar-fill" style="width:${(d.av/5*100).toFixed(0)}%;background:${dimColor(d.av)}"></div></div>
+      <div class="dimbar-val">${round1(d.av)} / 5</div>
+      <div class="dimbar-delta dim" title="aantal metingen">n=${d.n}</div>
+    </div>`).join('') : '<p class="muted-note">Geen competentie-scores beschikbaar.</p>'}
+    ${weakest? `<div class="weak-flag">⚠ Vroegsignalering: het cohort scoort het laagst op <b>${weakest.label}</b> (gem. ${round1(weakest.av)}/5). Overweeg gerichte training op deze dimensie.</div>`:''}
+  </div>`;
+
+  // Per-persoon tabel
+  const byPerson = new Map();
+  recs.forEach(r=>{ const k=personKey(r); if(!byPerson.has(k)) byPerson.set(k,[]); byPerson.get(k).push(r); });
+  const prows = [...byPerson.entries()].map(([k,rs])=>{
+    rs.sort((a,b)=>ts(a)-ts(b)); const lastR=rs[rs.length-1]; const b=behavOf(lastR);
+    const av=round1(avg(rs.map(scoreOf).filter(x=>x!=null)));
+    // zwakste dimensie van deze persoon
+    const dv={}; DIMENSIONS.forEach(d=>dv[d.key]=[]);
+    rs.forEach(r=>((r.assessment&&r.assessment.competencies)||[]).forEach(c=>{const ck=canonDim(c.name); if(ck&&typeof c.score==='number')dv[ck].push(c.score);}));
+    const da=DIMENSIONS.map(d=>({label:d.label,av:avg(dv[d.key])})).filter(d=>d.av!=null).sort((a,b)=>a.av-b.av);
+    const p=lastR.participant||{};
+    return { name:p.name||'(naamloos)', org:p.org||'', n:rs.length, av, b, weak:da[0], last:ts(lastR) };
+  }).sort((a,b)=> (a.av==null)-(b.av==null) || (a.av-b.av));
+  const personPanel = `<div class="panel"><h2>Deelnemers (${prows.length})</h2>
+    <table class="data"><thead><tr><th>Deelnemer</th><th>Organisatie</th><th>Runs</th><th>Gem. score</th><th>Niveau</th><th>Zwakste dimensie</th></tr></thead>
+    <tbody>${prows.map(p=>`<tr>
+      <td>${esc(p.name)}</td><td class="dim">${esc(p.org||'—')}</td>
+      <td class="num">${p.n}</td><td class="num">${p.av!=null?p.av:'—'}</td>
+      <td>${p.b?`<span class="chip ${p.b}">${BEHAV[p.b].label}</span>`:'—'}</td>
+      <td>${p.weak?esc(p.weak.label)+' <span class="dim">('+round1(p.weak.av)+')</span>':'—'}</td>
+    </tr>`).join('')}</tbody></table>
+    <div class="export-bar">
+      <button class="btn" onclick="exportCohortPDF()">⬇ PDF-rapport</button>
+      <button class="btn" onclick="exportCohortExcel()">⬇ Excel (alle runs)</button>
+    </div></div>`;
+
+  body.innerHTML = kpis + behavPanel + dimPanel + disciplinePanel(recs, 'Prioritering & discipline (cohort)') + personPanel;
+}
+
+/* ═══════════ PRIORITERING & DISCIPLINE (WP2) ═══════════ */
+function disciplineStats(records){
+  const prio = { must:{done:0,total:0}, should:{done:0,total:0}, could:{done:0,total:0} };
+  let hasPrio=false, lmraRuns=0, lmraDone=0, caught=0, interpreted=0, partial=0;
+  records.forEach(r=>{
+    const m = r.metrics || {};
+    if (m.prioritisation){ hasPrio=true;
+      ['must','should','could'].forEach(k=>{ const p=m.prioritisation[k]||{}; prio[k].done+=p.done||0; prio[k].total+=p.total||0; }); }
+    if (m.lmra && m.lmra.total>0){ lmraRuns++; if (m.lmra.completed) lmraDone++; }
+    if (typeof m.imperfectionsCaught==='number') caught+=m.imperfectionsCaught;
+    if (typeof m.imperfectionsInterpreted==='number') interpreted+=m.imperfectionsInterpreted;
+    if (typeof m.imperfectionsPartial==='number') partial+=m.imperfectionsPartial;
+  });
+  return { prio: hasPrio?prio:null, lmraRuns, lmraDone, caught, interpreted, partial };
+}
+function disciplinePanel(records, title){
+  const s = disciplineStats(records);
+  if (!s.prio && s.lmraRuns===0 && s.caught===0) return '';
+  let prioHtml='';
+  if (s.prio){
+    const bar=(k,label,col)=>{ const t=s.prio[k].total, d=s.prio[k].done, pct=t?Math.round(d/t*100):null;
+      return `<div class="dimbar-wrap"><div class="dimbar-lbl">${label}</div>
+        <div class="dimbar-track"><div class="dimbar-fill" style="width:${pct||0}%;background:${col}"></div></div>
+        <div class="dimbar-val">${t?pct+'%':'—'}</div><div class="dimbar-delta dim">${d}/${t}</div></div>`; };
+    prioHtml = `<div style="font-family:var(--mono);font-size:11px;color:var(--label);text-transform:uppercase;letter-spacing:.5px;margin:0 0 6px">Prioritering — voltooide acties per klasse (incident)</div>`
+      + bar('must','Must — essentieel','var(--green)')
+      + bar('should','Should — vakkundig','var(--blue)')
+      + bar('could','Could — extra','var(--amber)');
+  }
+  const cells=[];
+  if (s.lmraRuns>0) cells.push(`<div class="kpi"><div class="v">${Math.round(s.lmraDone/s.lmraRuns*100)}%</div><div class="l">LMRA voltooid</div><div class="sub">${s.lmraDone}/${s.lmraRuns} runs</div></div>`);
+  if (s.caught>0) cells.push(`<div class="kpi"><div class="v">${s.interpreted}</div><div class="l">Signaal juist geduid</div><div class="sub">${s.caught} opgemerkt · ${s.partial} deels</div></div>`);
+  const kpisHtml = cells.length?`<div class="kpis" style="margin-top:${s.prio?'14px':'0'}">${cells.join('')}</div>`:'';
+  return `<div class="panel"><h2>${title}</h2>${prioHtml}${kpisHtml}</div>`;
+}
+
+/* ═══════════ EXPORTS ═══════════ */
+function loadXLSX(cb){
+  if (typeof XLSX!=='undefined') return cb();
+  const s=document.createElement('script');
+  s.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+  s.onload=cb; s.onerror=()=>flash('Excel-bibliotheek kon niet geladen worden (internet nodig).','red');
+  document.head.appendChild(s);
+}
+function prioCell(p){ if(!p) return ''; return `${p.done||0}/${p.total||0}`; }
+function runRow(r){
+  const a=r.assessment||{}; const comp={};
+  (a.competencies||[]).forEach(c=>{ const k=canonDim(c.name); if(k&&typeof c.score==='number') comp[k]=c.score; });
+  const b=behavOf(r); const m=r.metrics||{}; const pr=m.prioritisation;
+  return {
+    Datum:fmtDate(dateOf(r)), Deelnemer:(r.participant&&r.participant.name)||'', Functie:(r.participant&&r.participant.role)||'',
+    Organisatie:(r.participant&&r.participant.org)||'', Variant:VARIANTS[r.variant]||r.variant||'',
+    Scenario:(r.scenario&&(r.scenario.title||r.scenario.id))||'', Type:(r.scenario&&r.scenario.type)||'',
+    'Duur (mm:ss)':fmtDur(r.run&&r.run.durationSec), Uitkomst:(r.run&&r.run.endReason)||'',
+    'Score (1-10)':scoreOf(r)??'', Gedragsniveau:b?BEHAV[b].label:'',
+    'Communicatie (1-10)':a.communicationScore??'',
+    Situatiebewustzijn:comp.situational??'', Communicatie:comp.communication??'',
+    Prioriteitstelling:comp.prioritisation??'', 'Procedure-opvolging':comp.procedure??'', 'Veilig werken':comp.safe??'',
+    'Must voltooid':pr?prioCell(pr.must):'', 'Should voltooid':pr?prioCell(pr.should):'', 'Could voltooid':pr?prioCell(pr.could):'',
+    'LMRA voltooid':(m.lmra&&m.lmra.total>0)?(m.lmra.completed?'ja':'nee'):'',
+    'Signaal opgemerkt':m.imperfectionsCaught??'', 'Signaal juist geduid':m.imperfectionsInterpreted??'',
+    Samenvatting:(a.summary||'').replace(/\s+/g,' ').slice(0,300)
+  };
+}
+function sheetFrom(rows, name, fname){
+  loadXLSX(()=>{
+    const wb=XLSX.utils.book_new();
+    const ws=XLSX.utils.json_to_sheet(rows);
+    ws['!cols']=Object.keys(rows[0]||{Datum:1}).map(k=>({wch: k==='Samenvatting'?60: k==='Scenario'?30: ['Deelnemer','Organisatie','Functie'].includes(k)?22:14}));
+    XLSX.utils.book_append_sheet(wb, ws, name.slice(0,31));
+    XLSX.writeFile(wb, fname);
+  });
+}
+function exportCohortExcel(){
+  const rows=filteredRecords().map(runRow);
+  if (!rows.length) return flash('Geen runs om te exporteren.','amber');
+  sheetFrom(rows, 'Runs', `Bekwaamheidsdossier_cohort_${new Date().toISOString().slice(0,10)}.xlsx`);
+}
+function exportPersonExcel(){
+  const p=peopleIndex().find(x=>x.key===STATE.selectedPersonKey); if(!p) return;
+  sheetFrom(p.runs.map(runRow), p.name.slice(0,28), `Dossier_${p.name.replace(/\s+/g,'_')}_${new Date().toISOString().slice(0,10)}.xlsx`);
+}
+
+function printHTML(title, inner){
+  const css = `body{font-family:-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:#1a2230;margin:34px;font-size:13px}
+    h1{font-size:20px;margin:0 0 2px}h2{font-size:14px;margin:22px 0 8px;color:#0a5a78;border-bottom:1px solid #cdd}
+    .sub{color:#667;font-size:12px;margin-bottom:6px}
+    table{border-collapse:collapse;width:100%;margin-top:6px;font-size:11.5px}
+    th,td{border:1px solid #cdd;padding:5px 7px;text-align:left}th{background:#eef4f7}
+    .kpi{display:inline-block;border:1px solid #cdd;border-radius:8px;padding:8px 14px;margin:4px 8px 4px 0}
+    .kpi b{font-size:20px;display:block}.chip{padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700}
+    .r{color:#c0392b}.a{color:#c08a00}.b{color:#1f78b4}.g{color:#1e8449}
+    .flag{background:#fff6e0;border:1px solid #e0b000;border-left:3px solid #e0b000;padding:8px 12px;border-radius:6px;margin-top:8px}
+    @media print{.noprint{display:none}}`;
+  const html = `<!doctype html><html><head><meta charset="utf-8"><title>${esc(title)}</title><style>${css}</style></head>
+    <body>${inner}<script>window.addEventListener('load',()=>setTimeout(()=>{try{window.print()}catch(e){}},300));<\/script></body></html>`;
+  const w=window.open('','_blank'); if(!w){ flash('Pop-up geblokkeerd — sta pop-ups toe voor de PDF.','amber'); return; }
+  w.document.open(); w.document.write(html); w.document.close();
+}
+const PCLS={reactive:'r',aware:'a',proactive:'b','in-control':'g'};
+function exportPersonPDF(){
+  const p=peopleIndex().find(x=>x.key===STATE.selectedPersonKey); if(!p) return;
+  const runs=p.runs, last=runs[runs.length-1], bl=behavOf(last);
+  const scores=runs.map(scoreOf).filter(x=>x!=null);
+  const series=personDimSeries(runs);
+  const dimHtml=DIMENSIONS.map(d=>{const s=series[d.key]; if(!s.length)return''; const av=avg(s.map(x=>x.val));
+    return `<tr><td>${d.label}</td><td>${round1(av)} / 5</td><td>${round1(s[0].val)} → ${round1(s[s.length-1].val)}</td></tr>`;}).filter(Boolean).join('');
+  const rowsHtml=runs.slice().reverse().map(r=>{const b=behavOf(r);
+    return `<tr><td>${fmtDate(dateOf(r))}</td><td>${VARIANTS[r.variant]||r.variant||''}</td><td>${esc((r.scenario&&r.scenario.title)||'')}</td>
+      <td>${fmtDur(r.run&&r.run.durationSec)}</td><td>${(r.run&&r.run.endReason!=='completed')?'hold-point':'voltooid'}</td>
+      <td>${scoreOf(r)??'—'}</td><td class="${PCLS[b]||''}">${b?BEHAV[b].label:'—'}</td></tr>`;}).join('');
+  const inner=`<h1>Bekwaamheidsdossier — ${esc(p.name)}</h1>
+    <div class="sub">${esc([p.role,p.org].filter(Boolean).join(' · '))} · gegenereerd ${fmtDate(new Date().toISOString())}</div>
+    <div class="kpi"><b>${runs.length}</b>runs</div>
+    <div class="kpi"><b>${round1(avg(scores))??'—'}</b>gem. score /10</div>
+    <div class="kpi"><b class="${PCLS[bl]||''}">${bl?BEHAV[bl].label:'—'}</b>huidig niveau</div>
+    <div class="kpi"><b>${fmtDate(dateOf(runs[0]))}<br>${fmtDate(dateOf(last))}</b>periode</div>
+    <h2>Competentie-ontwikkeling (eerste → laatste)</h2>
+    <table><tr><th>Dimensie</th><th>Gemiddeld</th><th>Verloop</th></tr>${dimHtml||'<tr><td colspan=3>Geen competentie-scores.</td></tr>'}</table>
+    <h2>Runs (${runs.length})</h2>
+    <table><tr><th>Datum</th><th>Variant</th><th>Scenario</th><th>Duur</th><th>Uitkomst</th><th>Score</th><th>Niveau</th></tr>${rowsHtml}</table>`;
+  printHTML('Dossier '+p.name, inner);
+}
+function exportCohortPDF(){
+  const recs=filteredRecords(); if(!recs.length) return flash('Geen runs om te exporteren.','amber');
+  const people=new Set(recs.map(personKey)); const scores=recs.map(scoreOf).filter(x=>x!=null);
+  const holdPts=recs.filter(r=>r.run&&r.run.endReason&&r.run.endReason!=='completed').length;
+  const dimVals={}; DIMENSIONS.forEach(d=>dimVals[d.key]=[]);
+  recs.forEach(r=>((r.assessment&&r.assessment.competencies)||[]).forEach(c=>{const k=canonDim(c.name);if(k&&typeof c.score==='number')dimVals[k].push(c.score);}));
+  const dimAvg=DIMENSIONS.map(d=>({...d,av:avg(dimVals[d.key]),n:dimVals[d.key].length})).filter(d=>d.n>0);
+  const weakest=dimAvg.slice().sort((a,b)=>a.av-b.av)[0];
+  const dimHtml=dimAvg.map(d=>`<tr><td>${d.label}</td><td>${round1(d.av)} / 5</td><td>${d.n}</td></tr>`).join('');
+  const fdesc=[['Organisatie',$('f-org').value],['Variant',VARIANTS[$('f-variant').value]||$('f-variant').value],['Scenario',$('f-scenario').value],['Vanaf',$('f-from').value],['Tot',$('f-to').value]].filter(x=>x[1]).map(x=>x[0]+': '+x[1]).join(' · ')||'alle runs';
+  const inner=`<h1>Cohort-rapport — bekwaamheid</h1>
+    <div class="sub">Filter: ${esc(fdesc)} · gegenereerd ${fmtDate(new Date().toISOString())}</div>
+    <div class="kpi"><b>${recs.length}</b>runs</div>
+    <div class="kpi"><b>${people.size}</b>deelnemers</div>
+    <div class="kpi"><b>${round1(avg(scores))??'—'}</b>gem. score /10</div>
+    <div class="kpi"><b>${holdPts}</b>hold-points</div>
+    <h2>Competentie-gemiddelden</h2>
+    <table><tr><th>Dimensie</th><th>Gemiddeld</th><th>Metingen</th></tr>${dimHtml||'<tr><td colspan=3>Geen scores.</td></tr>'}</table>
+    ${weakest?`<div class="flag">⚠ Vroegsignalering: laagste score op <b>${weakest.label}</b> (gem. ${round1(weakest.av)}/5).</div>`:''}`;
+  printHTML('Cohort-rapport', inner);
+}
+
+/* init */
+refreshAll();
+</script>
+</body>
+</html>
