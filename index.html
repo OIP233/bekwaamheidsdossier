@@ -36,6 +36,10 @@ h1,h2,h3 { margin:0; font-weight:600; color:var(--text-bright); }
 .btn.primary:hover { background:var(--cyan); border-color:var(--cyan); }
 .btn.ghost { background:transparent; }
 .btn.danger:hover { border-color:var(--red); color:var(--red); }
+#lang-toggle { display:flex; gap:2px; margin-left:2px; }
+.lang-btn { background:var(--panel); color:var(--text-dim); border:1px solid var(--border);
+  border-radius:6px; padding:7px 10px; font-size:12px; font-family:var(--mono); }
+.lang-btn.active { color:var(--cyan); border-color:var(--cyan); }
 
 /* ── Tabs ── */
 #tabs { display:flex; gap:6px; padding:12px 22px 0; background:var(--bg); }
@@ -135,36 +139,37 @@ svg text { font-family:var(--mono); }
 
 <div id="topbar">
   <div id="brand">
-    <span class="t">Bekwaamheidsdossier</span>
-    <span class="s">Live Scenario · run-registratie</span>
+    <span class="t" data-i18n="app.title">Bekwaamheidsdossier</span>
+    <span class="s" data-i18n="app.subtitle">Live Scenario · run-registratie</span>
   </div>
   <span id="topstats"></span>
   <div class="spacer"></div>
-  <button class="btn primary" onclick="pickFiles()">＋ Importeer runs</button>
-  <button class="btn ghost" onclick="loadFromCache()" title="Lees runs uit de lokale opslag van deze browser/machine">⟳ Lokale cache</button>
-  <button class="btn ghost danger" onclick="clearAll()">Wis alles</button>
+  <button class="btn primary" onclick="pickFiles()" data-i18n="btn.import">＋ Importeer runs</button>
+  <button class="btn ghost" onclick="loadFromCache()" data-i18n="btn.cache" data-i18n-title="btn.cache.title">⟳ Lokale cache</button>
+  <button class="btn ghost danger" onclick="clearAll()" data-i18n="btn.clearAll">Wis alles</button>
+  <div id="lang-toggle">
+    <button class="lang-btn" data-lang="nl" onclick="setLang('nl')">NL</button>
+    <button class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
+  </div>
   <input type="file" id="file-input" accept=".json,.lsrun,.lsrun.json,application/json" multiple class="hidden">
 </div>
 
 <div id="tabs" class="hidden">
-  <button class="tab active" id="tab-ind" onclick="setView('individual')">Individueel dossier</button>
-  <button class="tab" id="tab-coh" onclick="setView('cohort')">Cohort-dashboard</button>
+  <button class="tab active" id="tab-ind" onclick="setView('individual')" data-i18n="tab.individual">Individueel dossier</button>
+  <button class="tab" id="tab-coh" onclick="setView('cohort')" data-i18n="tab.cohort">Cohort-dashboard</button>
 </div>
 
 <div id="main">
 
   <!-- EMPTY STATE -->
   <div id="empty">
-    <h1 style="font-size:22px">Van cursus gevolgd naar bekwaamheid aangetoond</h1>
-    <p style="color:var(--text-dim);max-width:620px;margin:10px auto 0">
-      Importeer de <b>run-records</b> (<code>.lsrun.json</code>) die de Live Scenario players bij elke voltooide
-      run aanmaken. Dit dossier toont per persoon de ontwikkeling over de tijd en aggregeert tot een cohort-overzicht.</p>
+    <h1 style="font-size:22px" data-i18n="empty.h1">Van cursus gevolgd naar bekwaamheid aangetoond</h1>
+    <p style="color:var(--text-dim);max-width:620px;margin:10px auto 0" data-i18n="empty.intro"></p>
     <div id="drop">
       <div class="ico">🗂</div>
-      <h3>Sleep run-records hierheen</h3>
-      <p>of <button class="btn primary" style="margin-top:6px" onclick="pickFiles()">kies bestanden</button></p>
-      <p class="empty-hint">Accepteert losse <code>.lsrun.json</code>-bestanden of een gebundeld export-bestand.<br>
-      Alle verwerking gebeurt lokaal in je browser — er wordt niets verstuurd.</p>
+      <h3 data-i18n="empty.drop">Sleep run-records hierheen</h3>
+      <p data-i18n="empty.orChoose"></p>
+      <p class="empty-hint" data-i18n="empty.hint"></p>
     </div>
   </div>
 
@@ -172,24 +177,24 @@ svg text { font-family:var(--mono); }
   <div id="view-individual" class="hidden">
     <div id="ind-layout">
       <div>
-        <input id="person-search" placeholder="Zoek deelnemer…" oninput="renderPersonList()">
+        <input id="person-search" data-i18n-ph="search.ph" oninput="renderPersonList()">
         <div id="person-list"></div>
       </div>
-      <div id="person-detail"><p class="muted-note">Kies links een deelnemer.</p></div>
+      <div id="person-detail"><p class="muted-note" data-i18n="detail.pick">Kies links een deelnemer.</p></div>
     </div>
   </div>
 
   <!-- COHORT VIEW -->
   <div id="view-cohort" class="hidden">
     <div class="panel">
-      <h2>Filters</h2>
+      <h2 data-i18n="panel.filters">Filters</h2>
       <div class="filters" id="cohort-filters">
-        <div class="f"><label>Organisatie</label><select id="f-org" onchange="renderCohort()"></select></div>
-        <div class="f"><label>Variant</label><select id="f-variant" onchange="renderCohort()"></select></div>
-        <div class="f"><label>Scenario</label><select id="f-scenario" onchange="renderCohort()"></select></div>
-        <div class="f"><label>Vanaf</label><input type="date" id="f-from" onchange="renderCohort()"></div>
-        <div class="f"><label>Tot</label><input type="date" id="f-to" onchange="renderCohort()"></div>
-        <button class="btn ghost" onclick="resetFilters()">Reset</button>
+        <div class="f"><label data-i18n="f.org">Organisatie</label><select id="f-org" onchange="renderCohort()"></select></div>
+        <div class="f"><label data-i18n="f.variant">Variant</label><select id="f-variant" onchange="renderCohort()"></select></div>
+        <div class="f"><label data-i18n="f.scenario">Scenario</label><select id="f-scenario" onchange="renderCohort()"></select></div>
+        <div class="f"><label data-i18n="f.from">Vanaf</label><input type="date" id="f-from" onchange="renderCohort()"></div>
+        <div class="f"><label data-i18n="f.to">Tot</label><input type="date" id="f-to" onchange="renderCohort()"></div>
+        <button class="btn ghost" onclick="resetFilters()" data-i18n="f.reset">Reset</button>
       </div>
     </div>
     <div id="cohort-body"></div>
@@ -199,37 +204,203 @@ svg text { font-family:var(--mono); }
 
 <script>
 /* ═══════════════════════════════════════════════════════════════
-   Live Scenario · Bekwaamheidsdossier (WP4)
+   Live Scenario · Bekwaamheidsdossier (WP4 + WP5)
    Aggregeert canonieke run-records (schema 'livescenario-run' v1)
    uit de CRO/Field/Technical players → individueel dossier-over-tijd
    + cohort-dashboard. Volledig client-side; geen netwerk vereist.
+   WP5: import-validatie + i18n (nl/en; de/es vallen terug op en).
 ═══════════════════════════════════════════════════════════════ */
 
 const STORE_KEY = 'oip_run_records';
+const LANG_KEY  = 'oip_dossier_lang';
+const RUN_SCHEMA_VERSION = 1;
 const STATE = { records: [], view: 'individual', selectedPersonKey: null };
+
+/* ── i18n ── */
+let LANG = (function(){ try { return localStorage.getItem(LANG_KEY) || 'nl'; } catch(e){ return 'nl'; } })();
+const T = {
+  nl: {
+    'app.title':'Bekwaamheidsdossier', 'app.subtitle':'Live Scenario · run-registratie',
+    'btn.import':'＋ Importeer runs', 'btn.cache':'⟳ Lokale cache',
+    'btn.cache.title':'Lees runs uit de lokale opslag van deze browser/machine', 'btn.clearAll':'Wis alles',
+    'tab.individual':'Individueel dossier', 'tab.cohort':'Cohort-dashboard',
+    'empty.h1':'Van cursus gevolgd naar bekwaamheid aangetoond',
+    'empty.intro':'Importeer de <b>run-records</b> (<code>.lsrun.json</code>) die de Live Scenario players bij elke voltooide run aanmaken. Dit dossier toont per persoon de ontwikkeling over de tijd en aggregeert tot een cohort-overzicht.',
+    'empty.drop':'Sleep run-records hierheen',
+    'empty.orChoose':'of <button class="btn primary" style="margin-top:6px" onclick="pickFiles()">kies bestanden</button>',
+    'empty.hint':'Accepteert losse <code>.lsrun.json</code>-bestanden of een gebundeld export-bestand.<br>Alle verwerking gebeurt lokaal in je browser — er wordt niets verstuurd.',
+    'search.ph':'Zoek deelnemer…', 'detail.pick':'Kies links een deelnemer.',
+    'list.none':'Geen deelnemer gevonden.', 'detail.noData':'Geen data.', 'detail.currentLevel':'huidig niveau',
+    'stats.runs':'runs', 'stats.participants':'deelnemers', 'stats.scenarios':"scenario's",
+    'run':'run', 'runs':'runs',
+    'kpi.runs':'Runs', 'kpi.avgScore':'Gem. score', 'kpi.latest':'laatste: {v}',
+    'kpi.holdpoints':'Hold-points', 'kpi.stoppedEarly':'vroegtijdig gestopt',
+    'kpi.scenarios':"Scenario's", 'kpi.distinct':'verschillende',
+    'kpi.participants':'Deelnemers', 'kpi.outOf10':'van 10', 'kpi.pctOfRuns':'{p}% van runs',
+    'kpi.withinNorm':'Binnen normtijd', 'kpi.normRuns':'{a} van {b} runs met norm',
+    'kpi.withinNorm.title':"Norm = de doelstelling die de scenario-auteur per scenario instelt: bij een procedureel scenario de normtijd (totale duur), bij een incident de reactietijd-target (time-to-first-action). Een run telt 'binnen norm' als hij die haalt. Runs zonder ingestelde norm (o.a. CRO) tellen niet mee in deze noemer.",
+    'panel.scoreTrend':'Scoreverloop (1–10)', 'panel.behavEvo':'Gedragsevolutie',
+    'panel.compDev':'Competentie-ontwikkeling', 'detail.noComp':'Geen competentie-scores in deze runs.',
+    'panel.runsN':'Runs ({n})', 'chart.noScores':'geen scores',
+    'th.date':'Datum','th.variant':'Variant','th.scenario':'Scenario','th.duration':'Duur',
+    'th.outcome':'Uitkomst','th.score':'Score','th.level':'Niveau',
+    'out.holdpoint':'hold-point','out.completed':'voltooid',
+    'btn.pdfDossier':'⬇ PDF-dossier','btn.excel':'⬇ Excel',
+    'panel.filters':'Filters','f.org':'Organisatie','f.variant':'Variant','f.scenario':'Scenario',
+    'f.from':'Vanaf','f.to':'Tot','f.reset':'Reset','f.all':'Alle',
+    'cohort.noRuns':'Geen runs binnen deze filters.','panel.keyFigures':'Kerncijfers',
+    'panel.behavDist':'Gedragsniveau-verdeling','behav.unknown':'Onbekend',
+    'panel.compAvg':'Competentie-gemiddelden (1–5)','cohort.noComp':'Geen competentie-scores beschikbaar.',
+    'weakFlag':'⚠ Vroegsignalering: het cohort scoort het laagst op <b>{dim}</b> (gem. {v}/5). Overweeg gerichte training op deze dimensie.',
+    'n.measurements':'aantal metingen','panel.participantsN':'Deelnemers ({n})',
+    'th.participant':'Deelnemer','th.org':'Organisatie','th.weakestDim':'Zwakste dimensie',
+    'th.participants':'Deelnemers','th.withinNorm':'Binnen normtijd','th.holdpoints':'Hold-points',
+    'th.firstLast':'Score (eerste → laatste)',
+    'btn.pdfReport':'⬇ PDF-rapport','btn.excelAll':'⬇ Excel (alle runs)',
+    'disc.title':'Prioritering & discipline','disc.titleCohort':'Prioritering & discipline (cohort)',
+    'disc.prioHead':'Prioritering — voltooide acties per klasse (incident)',
+    'disc.must':'Must — essentieel','disc.should':'Should — vakkundig','disc.could':'Could — extra',
+    'disc.lmra':'LMRA voltooid','disc.lmraSub':'{a}/{b} runs',
+    'disc.signal':'Signaal juist geduid','disc.signalSub':'{a} opgemerkt · {b} deels',
+    'perScenario':'Per scenario ({n})',
+    'behav.reactive':'Reactief','behav.aware':'Bewust','behav.proactive':'Proactief','behav.in-control':'In Control',
+    'dim.situational':'Situatiebewustzijn','dim.communication':'Communicatie','dim.prioritisation':'Prioriteitstelling',
+    'dim.procedure':'Procedure-opvolging','dim.safe':'Veilig werken',
+    'var.cro':'Controlekamer','var.field':'Veldoperator','var.technical':'Technical',
+    'yes':'ja','no':'nee','anon':'(naamloos)',
+    'imp.added':'{n} run-record(s) toegevoegd','imp.dup':'{n} duplicaat overgeslagen',
+    'imp.invalid':'{n} overgeslagen (geen run-record)','imp.unreadable':'{n} bestand(en) onleesbaar',
+    'imp.newer':'{n} met nieuwere schemaversie','imp.none':'Geen geldige run-records gevonden.',
+    'cache.none':'Geen lokale cache gevonden op deze machine.','cache.loaded':'{n} run-record(s) uit lokale cache geladen.',
+    'cache.error':'Lokale cache kon niet gelezen worden.',
+    'clearAll.confirm':'Alle geïmporteerde runs uit dit overzicht verwijderen?\n(De brondata/bestanden blijven bestaan.)',
+    'export.none':'Geen runs om te exporteren.','export.xlsxFail':'Excel-bibliotheek kon niet geladen worden (internet nodig).',
+    'pdf.popup':'Pop-up geblokkeerd — sta pop-ups toe voor de PDF.',
+    'pdf.dossierTitle':'Bekwaamheidsdossier — {name}','pdf.generated':'gegenereerd {d}',
+    'pdf.avgScore10':'gem. score /10','pdf.period':'periode',
+    'pdf.compDevFL':'Competentie-ontwikkeling (eerste → laatste)',
+    'th.dimension':'Dimensie','th.average':'Gemiddeld','th.trend':'Verloop','th.measurements':'Metingen',
+    'pdf.noComp':'Geen competentie-scores.','pdf.cohortTitle':'Cohort-rapport — bekwaamheid',
+    'pdf.filter':'Filter: {f} · gegenereerd {d}','pdf.allRuns':'alle runs',
+    'pdf.compAvg':'Competentie-gemiddelden','pdf.noScores':'Geen scores.',
+    'pdf.weakFlag':'⚠ Vroegsignalering: laagste score op <b>{dim}</b> (gem. {v}/5).',
+    'col.function':'Functie','col.type':'Type','col.duration':'Duur (mm:ss)','col.score':'Score (1-10)',
+    'col.level':'Gedragsniveau','col.comm':'Communicatie (1-10)','col.mustDone':'Must voltooid',
+    'col.shouldDone':'Should voltooid','col.couldDone':'Could voltooid','col.lmraDone':'LMRA voltooid',
+    'col.signalNoticed':'Signaal opgemerkt','col.signalInterpreted':'Signaal juist geduid','col.summary':'Samenvatting',
+  },
+  en: {
+    'app.title':'Competence dossier', 'app.subtitle':'Live Scenario · run logging',
+    'btn.import':'＋ Import runs', 'btn.cache':'⟳ Local cache',
+    'btn.cache.title':'Read runs from this browser/machine local storage', 'btn.clearAll':'Clear all',
+    'tab.individual':'Individual dossier', 'tab.cohort':'Cohort dashboard',
+    'empty.h1':'From course attended to competence demonstrated',
+    'empty.intro':"Import the <b>run records</b> (<code>.lsrun.json</code>) the Live Scenario players create after each completed run. This dossier shows each person's development over time and aggregates into a cohort overview.",
+    'empty.drop':'Drag run records here',
+    'empty.orChoose':'or <button class="btn primary" style="margin-top:6px" onclick="pickFiles()">choose files</button>',
+    'empty.hint':'Accepts individual <code>.lsrun.json</code> files or a bundled export file.<br>All processing happens locally in your browser — nothing is sent.',
+    'search.ph':'Search participant…', 'detail.pick':'Select a participant on the left.',
+    'list.none':'No participant found.', 'detail.noData':'No data.', 'detail.currentLevel':'current level',
+    'stats.runs':'runs', 'stats.participants':'participants', 'stats.scenarios':'scenarios',
+    'run':'run', 'runs':'runs',
+    'kpi.runs':'Runs', 'kpi.avgScore':'Avg. score', 'kpi.latest':'latest: {v}',
+    'kpi.holdpoints':'Hold-points', 'kpi.stoppedEarly':'stopped early',
+    'kpi.scenarios':'Scenarios', 'kpi.distinct':'distinct',
+    'kpi.participants':'Participants', 'kpi.outOf10':'out of 10', 'kpi.pctOfRuns':'{p}% of runs',
+    'kpi.withinNorm':'Within norm time', 'kpi.normRuns':'{a} of {b} runs with a norm',
+    'kpi.withinNorm.title':"Norm = the target the scenario author sets per scenario: for a procedural scenario the norm time (total duration), for an incident the reaction-time target (time-to-first-action). A run counts as 'within norm' when it meets it. Runs without a defined norm (e.g. CRO) are excluded from this denominator.",
+    'panel.scoreTrend':'Score trend (1–10)', 'panel.behavEvo':'Behaviour evolution',
+    'panel.compDev':'Competency development', 'detail.noComp':'No competency scores in these runs.',
+    'panel.runsN':'Runs ({n})', 'chart.noScores':'no scores',
+    'th.date':'Date','th.variant':'Variant','th.scenario':'Scenario','th.duration':'Duration',
+    'th.outcome':'Outcome','th.score':'Score','th.level':'Level',
+    'out.holdpoint':'hold-point','out.completed':'completed',
+    'btn.pdfDossier':'⬇ PDF dossier','btn.excel':'⬇ Excel',
+    'panel.filters':'Filters','f.org':'Organisation','f.variant':'Variant','f.scenario':'Scenario',
+    'f.from':'From','f.to':'To','f.reset':'Reset','f.all':'All',
+    'cohort.noRuns':'No runs within these filters.','panel.keyFigures':'Key figures',
+    'panel.behavDist':'Behaviour level distribution','behav.unknown':'Unknown',
+    'panel.compAvg':'Competency averages (1–5)','cohort.noComp':'No competency scores available.',
+    'weakFlag':'⚠ Early warning: the cohort scores lowest on <b>{dim}</b> (avg. {v}/5). Consider targeted training on this dimension.',
+    'n.measurements':'number of measurements','panel.participantsN':'Participants ({n})',
+    'th.participant':'Participant','th.org':'Organisation','th.weakestDim':'Weakest dimension',
+    'th.participants':'Participants','th.withinNorm':'Within norm time','th.holdpoints':'Hold-points',
+    'th.firstLast':'Score (first → last)',
+    'btn.pdfReport':'⬇ PDF report','btn.excelAll':'⬇ Excel (all runs)',
+    'disc.title':'Prioritisation & discipline','disc.titleCohort':'Prioritisation & discipline (cohort)',
+    'disc.prioHead':'Prioritisation — completed actions per class (incident)',
+    'disc.must':'Must — essential','disc.should':'Should — skilled','disc.could':'Could — extra',
+    'disc.lmra':'LMRA completed','disc.lmraSub':'{a}/{b} runs',
+    'disc.signal':'Signal correctly interpreted','disc.signalSub':'{a} noticed · {b} partial',
+    'perScenario':'Per scenario ({n})',
+    'behav.reactive':'Reactive','behav.aware':'Aware','behav.proactive':'Proactive','behav.in-control':'In Control',
+    'dim.situational':'Situational awareness','dim.communication':'Communication','dim.prioritisation':'Prioritisation',
+    'dim.procedure':'Procedure compliance','dim.safe':'Safe working',
+    'var.cro':'Control room','var.field':'Field operator','var.technical':'Technical',
+    'yes':'yes','no':'no','anon':'(unnamed)',
+    'imp.added':'{n} run record(s) added','imp.dup':'{n} duplicate(s) skipped',
+    'imp.invalid':'{n} skipped (not a run record)','imp.unreadable':'{n} file(s) unreadable',
+    'imp.newer':'{n} with a newer schema version','imp.none':'No valid run records found.',
+    'cache.none':'No local cache found on this machine.','cache.loaded':'{n} run record(s) loaded from local cache.',
+    'cache.error':'Local cache could not be read.',
+    'clearAll.confirm':'Remove all imported runs from this overview?\n(The source data/files are kept.)',
+    'export.none':'No runs to export.','export.xlsxFail':'Excel library could not be loaded (internet required).',
+    'pdf.popup':'Pop-up blocked — allow pop-ups for the PDF.',
+    'pdf.dossierTitle':'Competence dossier — {name}','pdf.generated':'generated {d}',
+    'pdf.avgScore10':'avg. score /10','pdf.period':'period',
+    'pdf.compDevFL':'Competency development (first → last)',
+    'th.dimension':'Dimension','th.average':'Average','th.trend':'Trend','th.measurements':'Measurements',
+    'pdf.noComp':'No competency scores.','pdf.cohortTitle':'Cohort report — competence',
+    'pdf.filter':'Filter: {f} · generated {d}','pdf.allRuns':'all runs',
+    'pdf.compAvg':'Competency averages','pdf.noScores':'No scores.',
+    'pdf.weakFlag':'⚠ Early warning: lowest score on <b>{dim}</b> (avg. {v}/5).',
+    'col.function':'Function','col.type':'Type','col.duration':'Duration (mm:ss)','col.score':'Score (1-10)',
+    'col.level':'Behaviour level','col.comm':'Communication (1-10)','col.mustDone':'Must completed',
+    'col.shouldDone':'Should completed','col.couldDone':'Could completed','col.lmraDone':'LMRA completed',
+    'col.signalNoticed':'Signal noticed','col.signalInterpreted':'Signal interpreted','col.summary':'Summary',
+  },
+};
+function t(key, vars){
+  let s = (T[LANG] && T[LANG][key]) != null ? T[LANG][key] : (T.en[key] != null ? T.en[key] : (T.nl[key] != null ? T.nl[key] : key));
+  if (vars) Object.keys(vars).forEach(k => { s = s.split('{'+k+'}').join(vars[k]); });
+  return s;
+}
+function applyStaticI18n(){
+  document.querySelectorAll('[data-i18n]').forEach(el=>{ el.innerHTML = t(el.getAttribute('data-i18n')); });
+  document.querySelectorAll('[data-i18n-ph]').forEach(el=>{ el.placeholder = t(el.getAttribute('data-i18n-ph')); });
+  document.querySelectorAll('[data-i18n-title]').forEach(el=>{ el.title = t(el.getAttribute('data-i18n-title')); });
+  document.documentElement.lang = LANG;
+  document.title = 'Live Scenario · ' + t('app.title');
+}
+function setLang(l){
+  LANG = l; try { localStorage.setItem(LANG_KEY, l); } catch(e){}
+  document.querySelectorAll('.lang-btn').forEach(b=>b.classList.toggle('active', b.dataset.lang===l));
+  applyStaticI18n(); refreshAll();
+}
 
 /* ── Canonieke gedragslabels & competentie-dimensies ── */
 const BEHAV = {
-  'reactive':   { label:'Reactief',  color:'var(--red)',   rank:1 },
-  'aware':      { label:'Bewust',    color:'var(--amber)', rank:2 },
-  'proactive':  { label:'Proactief', color:'var(--blue)',  rank:3 },
-  'in-control': { label:'In Control',color:'var(--green)', rank:4 },
+  'reactive':   { color:'var(--red)',   rank:1 },
+  'aware':      { color:'var(--amber)', rank:2 },
+  'proactive':  { color:'var(--blue)',  rank:3 },
+  'in-control': { color:'var(--green)', rank:4 },
 };
 const BEHAV_ORDER = ['reactive','aware','proactive','in-control'];
-
 const DIMENSIONS = [
-  { key:'situational',   label:'Situatiebewustzijn',  match:['situat','aware','bewust'] },
-  { key:'communication', label:'Communicatie',        match:['commun','kommun'] },
-  { key:'prioritisation',label:'Prioriteitstelling',  match:['prior'] },
-  { key:'procedure',     label:'Procedure-opvolging',  match:['proced','verfahren'] },
-  { key:'safe',          label:'Veilig werken',        match:['veilig','safe','sicher','werken'] },
+  { key:'situational',   match:['situat','aware','bewust'] },
+  { key:'communication', match:['commun','kommun'] },
+  { key:'prioritisation',match:['prior'] },
+  { key:'procedure',     match:['proced','verfahren'] },
+  { key:'safe',          match:['veilig','safe','sicher','werken'] },
 ];
 function canonDim(name){
   const n = (name||'').toLowerCase();
   for (const d of DIMENSIONS){ if (d.match.some(m => n.includes(m))) return d.key; }
   return null;
 }
-const VARIANTS = { cro:'Controlekamer', field:'Veldoperator', technical:'Technical' };
+function behavLabel(b){ return b ? t('behav.'+b) : '—'; }
+function dimLabel(key){ return t('dim.'+key); }
+function varLabel(v){ const s=t('var.'+v); return s==='var.'+v ? (v||'—') : s; }
 
 /* ── Helpers ── */
 function $(id){ return document.getElementById(id); }
@@ -244,27 +415,37 @@ function behavOf(rec){
 function scoreOf(rec){ return (rec.assessment && typeof rec.assessment.score==='number') ? rec.assessment.score : null; }
 function dateOf(rec){ return rec.completedAt || (rec.run && rec.run.endedAt) || null; }
 function ts(rec){ const d = dateOf(rec); const t = d ? Date.parse(d) : NaN; return isNaN(t)?0:t; }
-function fmtDate(iso){ if(!iso) return '—'; const t=Date.parse(iso); if(isNaN(t)) return '—';
-  return new Date(t).toLocaleDateString('nl-NL',{day:'2-digit',month:'short',year:'numeric'}); }
+function dateLocale(){ return LANG==='en'?'en-GB':'nl-NL'; }
+function fmtDate(iso){ if(!iso) return '—'; const tt=Date.parse(iso); if(isNaN(tt)) return '—';
+  return new Date(tt).toLocaleDateString(dateLocale(),{day:'2-digit',month:'short',year:'numeric'}); }
 function fmtDur(sec){ if(sec==null) return '—'; const m=Math.floor(sec/60), s=sec%60;
   return String(m).padStart(2,'0')+':'+String(s).padStart(2,'0'); }
 function personKey(rec){ const p=rec.participant||{}; return ((p.name||'?').trim()+'|'+(p.org||'').trim()).toLowerCase(); }
 function avg(arr){ const v=arr.filter(x=>typeof x==='number'); return v.length? v.reduce((a,b)=>a+b,0)/v.length : null; }
 function round1(x){ return x==null?null:Math.round(x*10)/10; }
 function dimColor(v){ if(v==null) return 'var(--text-muted)'; return v<2.5?'var(--red)':v<3.5?'var(--amber)':v<4.5?'var(--blue)':'var(--green)'; }
+function runWord(n){ return n===1 ? t('run') : t('runs'); }
 
-/* ── Import ── */
+/* ── Import (WP5: validatie + nette meldingen) ── */
 function pickFiles(){ $('file-input').click(); }
 $('file-input').addEventListener('change', e => { handleFiles(e.target.files); e.target.value=''; });
 
-function extractRecords(parsed){
-  let arr = [];
-  if (Array.isArray(parsed)) arr = parsed;
-  else if (parsed && Array.isArray(parsed.records)) arr = parsed.records;
-  else if (parsed && typeof parsed==='object') arr = [parsed];
-  return arr.filter(r => r && typeof r==='object' &&
-    typeof r.recordFormat==='string' && r.recordFormat.indexOf('livescenario-run')===0);
+function recordIsValid(r){
+  return r && typeof r==='object' && typeof r.recordFormat==='string' && r.recordFormat.indexOf('livescenario-run')===0;
 }
+function rawRecords(parsed){
+  if (Array.isArray(parsed)) return parsed;
+  if (parsed && Array.isArray(parsed.records)) return parsed.records;   // bundel of {records:[]}
+  if (parsed && typeof parsed==='object') return [parsed];
+  return [];
+}
+function classify(parsed){
+  const raw = rawRecords(parsed);
+  const valid = raw.filter(recordIsValid);
+  const newer = valid.filter(r => typeof r.recordVersion==='number' && r.recordVersion > RUN_SCHEMA_VERSION).length;
+  return { valid, invalid: raw.length - valid.length, newer };
+}
+function extractRecords(parsed){ return classify(parsed).valid; }   // backward compat
 function addRecords(recs){
   const seen = new Set(STATE.records.map(r=>r.runId));
   let added=0;
@@ -278,42 +459,41 @@ function addRecords(recs){
 function handleFiles(fileList){
   const files = Array.from(fileList||[]);
   if (!files.length) return;
-  let pending = files.length, totalAdded=0, totalSkipped=0, errs=0;
+  let pending=files.length, added=0, dup=0, invalid=0, newer=0, unread=0;
   files.forEach(f=>{
     const r = new FileReader();
     r.onload = () => {
-      try {
-        const recs = extractRecords(JSON.parse(r.result));
-        const before = STATE.records.length;
-        const added = addRecords(recs);
-        totalAdded += added; totalSkipped += (recs.length - added);
-      } catch(e){ errs++; console.warn('Import-fout in', f.name, e); }
-      if (--pending===0) finishImport(totalAdded, totalSkipped, errs);
+      try { const c=classify(JSON.parse(r.result)); const a=addRecords(c.valid);
+        added+=a; dup+=(c.valid.length-a); invalid+=c.invalid; newer+=c.newer; }
+      catch(e){ unread++; console.warn('Import-fout in', f.name, e); }
+      if (--pending===0) finishImport({added,dup,invalid,newer,unread});
     };
-    r.onerror = () => { errs++; if(--pending===0) finishImport(totalAdded, totalSkipped, errs); };
+    r.onerror = () => { unread++; if(--pending===0) finishImport({added,dup,invalid,newer,unread}); };
     r.readAsText(f);
   });
 }
-function finishImport(added, skipped, errs){
-  let msg = `${added} run-record(s) toegevoegd`;
-  if (skipped) msg += `, ${skipped} duplicaat/ongeldig overgeslagen`;
-  if (errs) msg += `, ${errs} bestand(en) konden niet gelezen worden`;
-  flash(msg, errs?'amber':'green');
+function finishImport(s){
+  const parts=[ t('imp.added',{n:s.added}) ];
+  if (s.dup)     parts.push(t('imp.dup',{n:s.dup}));
+  if (s.invalid) parts.push(t('imp.invalid',{n:s.invalid}));
+  if (s.unread)  parts.push(t('imp.unreadable',{n:s.unread}));
+  if (s.newer)   parts.push(t('imp.newer',{n:s.newer}));
+  const kind = (s.unread||s.invalid||s.newer) ? 'amber' : (s.added ? 'green' : 'amber');
+  flash(parts.join(' · '), kind);
   refreshAll();
 }
 function loadFromCache(){
   try {
     const raw = localStorage.getItem(STORE_KEY);
-    if (!raw){ flash('Geen lokale cache gevonden op deze machine.', 'amber'); return; }
-    const recs = extractRecords(JSON.parse(raw));
-    const added = addRecords(recs);
-    flash(`${added} run-record(s) uit lokale cache geladen.`, added?'green':'amber');
+    if (!raw){ flash(t('cache.none'), 'amber'); return; }
+    const added = addRecords(classify(JSON.parse(raw)).valid);
+    flash(t('cache.loaded',{n:added}), added?'green':'amber');
     refreshAll();
-  } catch(e){ flash('Lokale cache kon niet gelezen worden.', 'red'); }
+  } catch(e){ flash(t('cache.error'), 'red'); }
 }
 function clearAll(){
   if (!STATE.records.length) return;
-  if (!confirm('Alle geïmporteerde runs uit dit overzicht verwijderen?\n(De brondata/bestanden blijven bestaan.)')) return;
+  if (!confirm(t('clearAll.confirm'))) return;
   STATE.records = []; STATE.selectedPersonKey = null; refreshAll();
 }
 
@@ -355,7 +535,7 @@ function updateTopStats(){
   const people = new Set(recs.map(personKey));
   const scen = new Set(recs.map(r=>r.scenario && (r.scenario.id || r.scenario.title)).filter(Boolean));
   $('topstats').textContent = recs.length
-    ? `${recs.length} runs · ${people.size} deelnemers · ${scen.size} scenario's`
+    ? `${recs.length} ${t('stats.runs')} · ${people.size} ${t('stats.participants')} · ${scen.size} ${t('stats.scenarios')}`
     : '';
 }
 function setView(v){
@@ -370,13 +550,13 @@ function peopleIndex(){
   const map = new Map();
   STATE.records.forEach(r=>{
     const k = personKey(r);
-    if (!map.has(k)) map.set(k, { key:k, name:(r.participant&&r.participant.name)||'(naamloos)',
+    if (!map.has(k)) map.set(k, { key:k, name:(r.participant&&r.participant.name)||t('anon'),
       role:(r.participant&&r.participant.role)||'', org:(r.participant&&r.participant.org)||'', runs:[] });
     map.get(k).runs.push(r);
   });
   const list = [...map.values()];
   list.forEach(p=>p.runs.sort((a,b)=>ts(a)-ts(b)));
-  list.sort((a,b)=>a.name.localeCompare(b.name,'nl'));
+  list.sort((a,b)=>a.name.localeCompare(b.name, LANG));
   return list;
 }
 function renderPersonList(){
@@ -386,18 +566,17 @@ function renderPersonList(){
   $('person-list').innerHTML = people.map(p=>{
     const last = p.runs[p.runs.length-1];
     const b = behavOf(last);
-    const chip = b ? `<span class="chip ${b}">${BEHAV[b].label}</span>` : '<span class="chip muted">—</span>';
+    const chip = b ? `<span class="chip ${b}">${behavLabel(b)}</span>` : '<span class="chip muted">—</span>';
     return `<div class="person-item ${p.key===STATE.selectedPersonKey?'sel':''}" onclick="selectPerson('${esc(p.key).replace(/'/g,"\\'")}')">
       <div class="nm">${esc(p.name)}</div>
       <div class="meta"><span>${esc([p.role,p.org].filter(Boolean).join(' · ')||'—')}</span></div>
-      <div class="meta"><span>${p.runs.length} run${p.runs.length!==1?'s':''}</span>${chip}</div>
+      <div class="meta"><span>${p.runs.length} ${runWord(p.runs.length)}</span>${chip}</div>
     </div>`;
-  }).join('') || '<p class="muted-note">Geen deelnemer gevonden.</p>';
+  }).join('') || `<p class="muted-note">${t('list.none')}</p>`;
 }
 function selectPerson(k){ STATE.selectedPersonKey=k; renderPersonList(); renderPersonDetail(); }
 
 function personDimSeries(runs){
-  // per dimensie: array van {date, val} (alleen runs waar de dimensie aanwezig is)
   const out = {};
   DIMENSIONS.forEach(d=>out[d.key]=[]);
   runs.forEach(r=>{
@@ -410,7 +589,7 @@ function personDimSeries(runs){
 function renderPersonDetail(){
   const people = peopleIndex();
   const p = people.find(x=>x.key===STATE.selectedPersonKey) || people[0];
-  if (!p){ $('person-detail').innerHTML='<p class="muted-note">Geen data.</p>'; return; }
+  if (!p){ $('person-detail').innerHTML=`<p class="muted-note">${t('detail.noData')}</p>`; return; }
   const runs = p.runs;
   const last = runs[runs.length-1];
   const bl = behavOf(last);
@@ -419,14 +598,11 @@ function renderPersonDetail(){
   const period = `${fmtDate(dateOf(runs[0]))} – ${fmtDate(dateOf(last))}`;
   const holdPts = runs.filter(r=>r.run && r.run.endReason && r.run.endReason!=='completed').length;
 
-  // Score-verloop chart
   const chart = lineChart(runs.map(r=>({ t:ts(r), v:scoreOf(r), label:fmtDate(dateOf(r)) })));
 
-  // Gedragsevolutie-strip
   const strip = runs.map(r=>{ const b=behavOf(r);
-    return `<span class="chip ${b||'muted'}" title="${esc(fmtDate(dateOf(r)))}">${b?BEHAV[b].label:'—'}</span>`; }).join(' ');
+    return `<span class="chip ${b||'muted'}" title="${esc(fmtDate(dateOf(r)))}">${behavLabel(b)}</span>`; }).join(' ');
 
-  // Competentie-dimensies (gemiddelde + delta laatste vs eerste)
   const series = personDimSeries(runs);
   const dimRows = DIMENSIONS.map(d=>{
     const s = series[d.key];
@@ -437,26 +613,25 @@ function renderPersonDetail(){
     const deltaTxt = s.length>1 ? (delta>0?`<span style="color:var(--green)">▲${round1(delta)}</span>`
       : delta<0?`<span style="color:var(--red)">▼${round1(Math.abs(delta))}</span>` : '<span class="dim">—</span>') : '';
     return `<div class="dimbar-wrap">
-      <div class="dimbar-lbl">${d.label}</div>
+      <div class="dimbar-lbl">${dimLabel(d.key)}</div>
       <div class="dimbar-track"><div class="dimbar-fill" style="width:${(av/5*100).toFixed(0)}%;background:${dimColor(av)}"></div></div>
       <div class="dimbar-val">${round1(av)} / 5</div>
       <div class="dimbar-delta">${deltaTxt}</div>
     </div>`;
   }).filter(Boolean).join('');
 
-  // Runs-tabel
   const rows = runs.slice().reverse().map(r=>{
     const b=behavOf(r); const v=r.variant||''; const sc=scoreOf(r);
     const out = (r.run&&r.run.endReason&&r.run.endReason!=='completed')
-      ? `<span style="color:var(--amber)">hold-point</span>` : 'voltooid';
+      ? `<span style="color:var(--amber)">${t('out.holdpoint')}</span>` : t('out.completed');
     return `<tr>
       <td>${fmtDate(dateOf(r))}</td>
-      <td><span class="vbadge ${v}">${VARIANTS[v]||v||'—'}</span></td>
+      <td><span class="vbadge ${v}">${varLabel(v)}</span></td>
       <td>${esc((r.scenario&&r.scenario.title)||(r.scenario&&r.scenario.id)||'—')}</td>
       <td class="num">${fmtDur(r.run&&r.run.durationSec)}</td>
       <td>${out}</td>
       <td class="num">${sc!=null?sc+'/10':'—'}</td>
-      <td>${b?`<span class="chip ${b}">${BEHAV[b].label}</span>`:'—'}</td>
+      <td>${b?`<span class="chip ${b}">${behavLabel(b)}</span>`:'—'}</td>
     </tr>`;
   }).join('');
 
@@ -468,47 +643,47 @@ function renderPersonDetail(){
           <div style="font-family:var(--mono);font-size:12px;color:var(--text-dim)">${esc([p.role,p.org].filter(Boolean).join(' · ')||'—')}</div>
         </div>
         <div style="text-align:right">
-          ${bl?`<span class="chip ${bl}">${BEHAV[bl].label}</span>`:''}
-          <div style="font-family:var(--mono);font-size:11px;color:var(--text-muted);margin-top:6px">huidig niveau</div>
+          ${bl?`<span class="chip ${bl}">${behavLabel(bl)}</span>`:''}
+          <div style="font-family:var(--mono);font-size:11px;color:var(--text-muted);margin-top:6px">${t('detail.currentLevel')}</div>
         </div>
       </div>
       <div class="kpis" style="margin-top:16px">
-        <div class="kpi"><div class="v">${runs.length}</div><div class="l">Runs</div><div class="sub">${esc(period)}</div></div>
-        <div class="kpi"><div class="v">${avgScore!=null?avgScore:'—'}</div><div class="l">Gem. score</div><div class="sub">laatste: ${scoreOf(last)!=null?scoreOf(last)+'/10':'—'}</div></div>
-        <div class="kpi"><div class="v">${holdPts}</div><div class="l">Hold-points</div><div class="sub">vroegtijdig gestopt</div></div>
-        <div class="kpi"><div class="v">${new Set(runs.map(r=>r.scenario&&(r.scenario.id||r.scenario.title)).filter(Boolean)).size}</div><div class="l">Scenario's</div><div class="sub">verschillende</div></div>
+        <div class="kpi"><div class="v">${runs.length}</div><div class="l">${t('kpi.runs')}</div><div class="sub">${esc(period)}</div></div>
+        <div class="kpi"><div class="v">${avgScore!=null?avgScore:'—'}</div><div class="l">${t('kpi.avgScore')}</div><div class="sub">${t('kpi.latest',{v:(scoreOf(last)!=null?scoreOf(last)+'/10':'—')})}</div></div>
+        <div class="kpi"><div class="v">${holdPts}</div><div class="l">${t('kpi.holdpoints')}</div><div class="sub">${t('kpi.stoppedEarly')}</div></div>
+        <div class="kpi"><div class="v">${new Set(runs.map(r=>r.scenario&&(r.scenario.id||r.scenario.title)).filter(Boolean)).size}</div><div class="l">${t('kpi.scenarios')}</div><div class="sub">${t('kpi.distinct')}</div></div>
       </div>
     </div>
 
     <div class="panel">
-      <h2>Scoreverloop (1–10)</h2>
+      <h2>${t('panel.scoreTrend')}</h2>
       ${chart}
       <div class="legend">
-        <span><i style="background:var(--red)"></i>Reactief 1–3</span>
-        <span><i style="background:var(--amber)"></i>Bewust 4–5</span>
-        <span><i style="background:var(--blue)"></i>Proactief 6–7</span>
-        <span><i style="background:var(--green)"></i>In Control 8–10</span>
+        <span><i style="background:var(--red)"></i>${behavLabel('reactive')} 1–3</span>
+        <span><i style="background:var(--amber)"></i>${behavLabel('aware')} 4–5</span>
+        <span><i style="background:var(--blue)"></i>${behavLabel('proactive')} 6–7</span>
+        <span><i style="background:var(--green)"></i>${behavLabel('in-control')} 8–10</span>
       </div>
-      <div style="margin-top:14px"><div style="font-family:var(--mono);font-size:11px;color:var(--label);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Gedragsevolutie</div>${strip}</div>
+      <div style="margin-top:14px"><div style="font-family:var(--mono);font-size:11px;color:var(--label);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">${t('panel.behavEvo')}</div>${strip}</div>
     </div>
 
     <div class="panel">
-      <h2>Competentie-ontwikkeling</h2>
-      ${dimRows || '<p class="muted-note">Geen competentie-scores in deze runs.</p>'}
+      <h2>${t('panel.compDev')}</h2>
+      ${dimRows || `<p class="muted-note">${t('detail.noComp')}</p>`}
     </div>
 
-    ${disciplinePanel(runs, 'Prioritering & discipline')}
+    ${disciplinePanel(runs, t('disc.title'))}
 
     ${scenarioPanelPerson(runs)}
 
     <div class="panel">
-      <h2>Runs (${runs.length})</h2>
+      <h2>${t('panel.runsN',{n:runs.length})}</h2>
       <table class="data"><thead><tr>
-        <th>Datum</th><th>Variant</th><th>Scenario</th><th>Duur</th><th>Uitkomst</th><th>Score</th><th>Niveau</th>
+        <th>${t('th.date')}</th><th>${t('th.variant')}</th><th>${t('th.scenario')}</th><th>${t('th.duration')}</th><th>${t('th.outcome')}</th><th>${t('th.score')}</th><th>${t('th.level')}</th>
       </tr></thead><tbody>${rows}</tbody></table>
       <div class="export-bar">
-        <button class="btn" onclick="exportPersonPDF()">⬇ PDF-dossier</button>
-        <button class="btn" onclick="exportPersonExcel()">⬇ Excel</button>
+        <button class="btn" onclick="exportPersonPDF()">${t('btn.pdfDossier')}</button>
+        <button class="btn" onclick="exportPersonExcel()">${t('btn.excel')}</button>
       </div>
     </div>`;
 }
@@ -518,16 +693,14 @@ function lineChart(points){
   const pts = points.filter(p=>p.v!=null);
   const W=720, H=240, padL=34, padR=14, padT=14, padB=40;
   const iw=W-padL-padR, ih=H-padT-padB;
-  // behaviour-banden
   const band=(lo,hi,col)=>{ const y1=padT+ih*(1-(hi)/10), y2=padT+ih*(1-(lo-1)/10);
     return `<rect x="${padL}" y="${y1.toFixed(1)}" width="${iw}" height="${(y2-y1).toFixed(1)}" fill="${col}" opacity="0.06"/>`; };
   let bands = band(1,3,'#ff4438')+band(4,5,'#ffc840')+band(6,7,'#52c0f8')+band(8,10,'#28f076');
-  // gridlines + y-as labels
   let grid='';
   for (let s=0;s<=10;s+=2){ const y=padT+ih*(1-s/10);
     grid+=`<line x1="${padL}" y1="${y.toFixed(1)}" x2="${W-padR}" y2="${y.toFixed(1)}" stroke="#3e5070" stroke-width="0.5"/>`;
     grid+=`<text x="${padL-6}" y="${(y+3).toFixed(1)}" fill="#60788e" font-size="9" text-anchor="end">${s}</text>`; }
-  if (!pts.length) return `<svg viewBox="0 0 ${W} ${H}" width="100%">${bands}${grid}<text x="${W/2}" y="${H/2}" fill="#60788e" font-size="11" text-anchor="middle">geen scores</text></svg>`;
+  if (!pts.length) return `<svg viewBox="0 0 ${W} ${H}" width="100%">${bands}${grid}<text x="${W/2}" y="${H/2}" fill="#60788e" font-size="11" text-anchor="middle">${t('chart.noScores')}</text></svg>`;
   const n=pts.length;
   const xOf=i=> n===1 ? padL+iw/2 : padL + iw*(i/(n-1));
   const yOf=v=> padT + ih*(1-(v)/10);
@@ -547,12 +720,12 @@ function buildFilterOptions(){
   const recs = STATE.records;
   const fill = (id, vals, labeler) => {
     const sel = $(id); const cur = sel.value;
-    const opts = ['<option value="">Alle</option>'].concat(
+    const opts = [`<option value="">${t('f.all')}</option>`].concat(
       [...new Set(vals)].filter(Boolean).sort().map(v=>`<option value="${esc(v)}">${esc(labeler?labeler(v):v)}</option>`));
     sel.innerHTML = opts.join(''); if ([...sel.options].some(o=>o.value===cur)) sel.value=cur;
   };
   fill('f-org', recs.map(r=>r.participant&&r.participant.org));
-  fill('f-variant', recs.map(r=>r.variant), v=>VARIANTS[v]||v);
+  fill('f-variant', recs.map(r=>r.variant), v=>varLabel(v));
   fill('f-scenario', recs.map(r=>r.scenario&&(r.scenario.title||r.scenario.id)));
 }
 function resetFilters(){ ['f-org','f-variant','f-scenario'].forEach(id=>$(id).value=''); $('f-from').value=''; $('f-to').value=''; renderCohort(); }
@@ -571,78 +744,72 @@ function filteredRecords(){
 function renderCohort(){
   const recs = filteredRecords();
   const body = $('cohort-body');
-  if (!recs.length){ body.innerHTML='<div class="panel"><p class="muted-note">Geen runs binnen deze filters.</p></div>'; return; }
+  if (!recs.length){ body.innerHTML=`<div class="panel"><p class="muted-note">${t('cohort.noRuns')}</p></div>`; return; }
   const people = new Set(recs.map(personKey));
   const scores = recs.map(scoreOf).filter(x=>x!=null);
   const holdPts = recs.filter(r=>r.run&&r.run.endReason&&r.run.endReason!=='completed').length;
   const normRuns = recs.filter(r=>r.run&&typeof r.run.withinNorm==='boolean');
   const withinNorm = normRuns.filter(r=>r.run.withinNorm).length;
 
-  // Behaviour-verdeling
   const bc={reactive:0,aware:0,proactive:0,'in-control':0,none:0};
   recs.forEach(r=>{ const b=behavOf(r); bc[b||'none']++; });
 
-  // Competentie-gemiddelden
   const dimVals={}; DIMENSIONS.forEach(d=>dimVals[d.key]=[]);
   recs.forEach(r=>{ ((r.assessment&&r.assessment.competencies)||[]).forEach(c=>{
     const k=canonDim(c.name); if(k&&typeof c.score==='number') dimVals[k].push(c.score); }); });
-  const dimAvg = DIMENSIONS.map(d=>({ ...d, av:avg(dimVals[d.key]), n:dimVals[d.key].length })).filter(d=>d.n>0);
+  const dimAvg = DIMENSIONS.map(d=>({ key:d.key, av:avg(dimVals[d.key]), n:dimVals[d.key].length })).filter(d=>d.n>0);
   const weakest = dimAvg.slice().sort((a,b)=>a.av-b.av)[0];
 
-  const kpis = `<div class="panel"><h2>Kerncijfers</h2><div class="kpis">
-    <div class="kpi"><div class="v">${recs.length}</div><div class="l">Runs</div></div>
-    <div class="kpi"><div class="v">${people.size}</div><div class="l">Deelnemers</div></div>
-    <div class="kpi"><div class="v">${round1(avg(scores))??'—'}</div><div class="l">Gem. score</div><div class="sub">van 10</div></div>
-    <div class="kpi"><div class="v">${holdPts}</div><div class="l">Hold-points</div><div class="sub">${(holdPts/recs.length*100).toFixed(0)}% van runs</div></div>
-    <div class="kpi" title="Norm = de doelstelling die de scenario-auteur per scenario instelt: bij een procedureel scenario de normtijd (totale duur), bij een incident de reactietijd-target (time-to-first-action). Een run telt 'binnen norm' als hij die haalt. Runs zonder ingestelde norm (o.a. CRO) tellen niet mee in deze noemer."><div class="v">${normRuns.length?Math.round(withinNorm/normRuns.length*100)+'%':'—'}</div><div class="l">Binnen normtijd</div><div class="sub">${normRuns.length} van ${recs.length} runs met norm</div></div>
+  const kpis = `<div class="panel"><h2>${t('panel.keyFigures')}</h2><div class="kpis">
+    <div class="kpi"><div class="v">${recs.length}</div><div class="l">${t('kpi.runs')}</div></div>
+    <div class="kpi"><div class="v">${people.size}</div><div class="l">${t('kpi.participants')}</div></div>
+    <div class="kpi"><div class="v">${round1(avg(scores))??'—'}</div><div class="l">${t('kpi.avgScore')}</div><div class="sub">${t('kpi.outOf10')}</div></div>
+    <div class="kpi"><div class="v">${holdPts}</div><div class="l">${t('kpi.holdpoints')}</div><div class="sub">${t('kpi.pctOfRuns',{p:(holdPts/recs.length*100).toFixed(0)})}</div></div>
+    <div class="kpi" title="${esc(t('kpi.withinNorm.title'))}"><div class="v">${normRuns.length?Math.round(withinNorm/normRuns.length*100)+'%':'—'}</div><div class="l">${t('kpi.withinNorm')}</div><div class="sub">${t('kpi.normRuns',{a:normRuns.length,b:recs.length})}</div></div>
   </div></div>`;
 
-  // Behaviour bar
   const total=recs.length;
-  const seg = BEHAV_ORDER.map(b=> bc[b]?`<div title="${BEHAV[b].label}: ${bc[b]}" style="width:${(bc[b]/total*100).toFixed(1)}%;background:${BEHAV[b].color};opacity:.85"></div>`:'').join('')
-    + (bc.none?`<div title="Onbekend: ${bc.none}" style="width:${(bc.none/total*100).toFixed(1)}%;background:var(--text-muted);opacity:.5"></div>`:'');
-  const behavPanel = `<div class="panel"><h2>Gedragsniveau-verdeling</h2>
+  const seg = BEHAV_ORDER.map(b=> bc[b]?`<div title="${behavLabel(b)}: ${bc[b]}" style="width:${(bc[b]/total*100).toFixed(1)}%;background:${BEHAV[b].color};opacity:.85"></div>`:'').join('')
+    + (bc.none?`<div title="${t('behav.unknown')}: ${bc.none}" style="width:${(bc.none/total*100).toFixed(1)}%;background:var(--text-muted);opacity:.5"></div>`:'');
+  const behavPanel = `<div class="panel"><h2>${t('panel.behavDist')}</h2>
     <div style="display:flex;height:26px;border-radius:6px;overflow:hidden;border:1px solid var(--border)">${seg}</div>
-    <div class="legend">${BEHAV_ORDER.map(b=>`<span><i style="background:${BEHAV[b].color}"></i>${BEHAV[b].label} ${bc[b]}</span>`).join('')}${bc.none?`<span><i style="background:var(--text-muted)"></i>Onbekend ${bc.none}</span>`:''}</div></div>`;
+    <div class="legend">${BEHAV_ORDER.map(b=>`<span><i style="background:${BEHAV[b].color}"></i>${behavLabel(b)} ${bc[b]}</span>`).join('')}${bc.none?`<span><i style="background:var(--text-muted)"></i>${t('behav.unknown')} ${bc.none}</span>`:''}</div></div>`;
 
-  // Competentie-gemiddelden
-  const dimPanel = `<div class="panel"><h2>Competentie-gemiddelden (1–5)</h2>
+  const dimPanel = `<div class="panel"><h2>${t('panel.compAvg')}</h2>
     ${dimAvg.length? dimAvg.map(d=>`<div class="dimbar-wrap">
-      <div class="dimbar-lbl">${d.label}</div>
+      <div class="dimbar-lbl">${dimLabel(d.key)}</div>
       <div class="dimbar-track"><div class="dimbar-fill" style="width:${(d.av/5*100).toFixed(0)}%;background:${dimColor(d.av)}"></div></div>
       <div class="dimbar-val">${round1(d.av)} / 5</div>
-      <div class="dimbar-delta dim" title="aantal metingen">n=${d.n}</div>
-    </div>`).join('') : '<p class="muted-note">Geen competentie-scores beschikbaar.</p>'}
-    ${weakest? `<div class="weak-flag">⚠ Vroegsignalering: het cohort scoort het laagst op <b>${weakest.label}</b> (gem. ${round1(weakest.av)}/5). Overweeg gerichte training op deze dimensie.</div>`:''}
+      <div class="dimbar-delta dim" title="${t('n.measurements')}">n=${d.n}</div>
+    </div>`).join('') : `<p class="muted-note">${t('cohort.noComp')}</p>`}
+    ${weakest? `<div class="weak-flag">${t('weakFlag',{dim:dimLabel(weakest.key),v:round1(weakest.av)})}</div>`:''}
   </div>`;
 
-  // Per-persoon tabel
   const byPerson = new Map();
   recs.forEach(r=>{ const k=personKey(r); if(!byPerson.has(k)) byPerson.set(k,[]); byPerson.get(k).push(r); });
   const prows = [...byPerson.entries()].map(([k,rs])=>{
     rs.sort((a,b)=>ts(a)-ts(b)); const lastR=rs[rs.length-1]; const b=behavOf(lastR);
     const av=round1(avg(rs.map(scoreOf).filter(x=>x!=null)));
-    // zwakste dimensie van deze persoon
     const dv={}; DIMENSIONS.forEach(d=>dv[d.key]=[]);
     rs.forEach(r=>((r.assessment&&r.assessment.competencies)||[]).forEach(c=>{const ck=canonDim(c.name); if(ck&&typeof c.score==='number')dv[ck].push(c.score);}));
-    const da=DIMENSIONS.map(d=>({label:d.label,av:avg(dv[d.key])})).filter(d=>d.av!=null).sort((a,b)=>a.av-b.av);
+    const da=DIMENSIONS.map(d=>({key:d.key,av:avg(dv[d.key])})).filter(d=>d.av!=null).sort((a,b)=>a.av-b.av);
     const p=lastR.participant||{};
-    return { name:p.name||'(naamloos)', org:p.org||'', n:rs.length, av, b, weak:da[0], last:ts(lastR) };
+    return { name:p.name||t('anon'), org:p.org||'', n:rs.length, av, b, weak:da[0], last:ts(lastR) };
   }).sort((a,b)=> (a.av==null)-(b.av==null) || (a.av-b.av));
-  const personPanel = `<div class="panel"><h2>Deelnemers (${prows.length})</h2>
-    <table class="data"><thead><tr><th>Deelnemer</th><th>Organisatie</th><th>Runs</th><th>Gem. score</th><th>Niveau</th><th>Zwakste dimensie</th></tr></thead>
+  const personPanel = `<div class="panel"><h2>${t('panel.participantsN',{n:prows.length})}</h2>
+    <table class="data"><thead><tr><th>${t('th.participant')}</th><th>${t('th.org')}</th><th>${t('kpi.runs')}</th><th>${t('kpi.avgScore')}</th><th>${t('th.level')}</th><th>${t('th.weakestDim')}</th></tr></thead>
     <tbody>${prows.map(p=>`<tr>
       <td>${esc(p.name)}</td><td class="dim">${esc(p.org||'—')}</td>
       <td class="num">${p.n}</td><td class="num">${p.av!=null?p.av:'—'}</td>
-      <td>${p.b?`<span class="chip ${p.b}">${BEHAV[p.b].label}</span>`:'—'}</td>
-      <td>${p.weak?esc(p.weak.label)+' <span class="dim">('+round1(p.weak.av)+')</span>':'—'}</td>
+      <td>${p.b?`<span class="chip ${p.b}">${behavLabel(p.b)}</span>`:'—'}</td>
+      <td>${p.weak?dimLabel(p.weak.key)+' <span class="dim">('+round1(p.weak.av)+')</span>':'—'}</td>
     </tr>`).join('')}</tbody></table>
     <div class="export-bar">
-      <button class="btn" onclick="exportCohortPDF()">⬇ PDF-rapport</button>
-      <button class="btn" onclick="exportCohortExcel()">⬇ Excel (alle runs)</button>
+      <button class="btn" onclick="exportCohortPDF()">${t('btn.pdfReport')}</button>
+      <button class="btn" onclick="exportCohortExcel()">${t('btn.excelAll')}</button>
     </div></div>`;
 
-  body.innerHTML = kpis + behavPanel + dimPanel + disciplinePanel(recs, 'Prioritering & discipline (cohort)') + scenarioPanelCohort(recs) + personPanel;
+  body.innerHTML = kpis + behavPanel + dimPanel + disciplinePanel(recs, t('disc.titleCohort')) + scenarioPanelCohort(recs) + personPanel;
 }
 
 /* ═══════════ PRIORITERING & DISCIPLINE (WP2) ═══════════ */
@@ -665,18 +832,18 @@ function disciplinePanel(records, title){
   if (!s.prio && s.lmraRuns===0 && s.caught===0) return '';
   let prioHtml='';
   if (s.prio){
-    const bar=(k,label,col)=>{ const t=s.prio[k].total, d=s.prio[k].done, pct=t?Math.round(d/t*100):null;
+    const bar=(k,label,col)=>{ const tt=s.prio[k].total, d=s.prio[k].done, pct=tt?Math.round(d/tt*100):null;
       return `<div class="dimbar-wrap"><div class="dimbar-lbl">${label}</div>
         <div class="dimbar-track"><div class="dimbar-fill" style="width:${pct||0}%;background:${col}"></div></div>
-        <div class="dimbar-val">${t?pct+'%':'—'}</div><div class="dimbar-delta dim">${d}/${t}</div></div>`; };
-    prioHtml = `<div style="font-family:var(--mono);font-size:11px;color:var(--label);text-transform:uppercase;letter-spacing:.5px;margin:0 0 6px">Prioritering — voltooide acties per klasse (incident)</div>`
-      + bar('must','Must — essentieel','var(--green)')
-      + bar('should','Should — vakkundig','var(--blue)')
-      + bar('could','Could — extra','var(--amber)');
+        <div class="dimbar-val">${tt?pct+'%':'—'}</div><div class="dimbar-delta dim">${d}/${tt}</div></div>`; };
+    prioHtml = `<div style="font-family:var(--mono);font-size:11px;color:var(--label);text-transform:uppercase;letter-spacing:.5px;margin:0 0 6px">${t('disc.prioHead')}</div>`
+      + bar('must',t('disc.must'),'var(--green)')
+      + bar('should',t('disc.should'),'var(--blue)')
+      + bar('could',t('disc.could'),'var(--amber)');
   }
   const cells=[];
-  if (s.lmraRuns>0) cells.push(`<div class="kpi"><div class="v">${Math.round(s.lmraDone/s.lmraRuns*100)}%</div><div class="l">LMRA voltooid</div><div class="sub">${s.lmraDone}/${s.lmraRuns} runs</div></div>`);
-  if (s.caught>0) cells.push(`<div class="kpi"><div class="v">${s.interpreted}</div><div class="l">Signaal juist geduid</div><div class="sub">${s.caught} opgemerkt · ${s.partial} deels</div></div>`);
+  if (s.lmraRuns>0) cells.push(`<div class="kpi"><div class="v">${Math.round(s.lmraDone/s.lmraRuns*100)}%</div><div class="l">${t('disc.lmra')}</div><div class="sub">${t('disc.lmraSub',{a:s.lmraDone,b:s.lmraRuns})}</div></div>`);
+  if (s.caught>0) cells.push(`<div class="kpi"><div class="v">${s.interpreted}</div><div class="l">${t('disc.signal')}</div><div class="sub">${t('disc.signalSub',{a:s.caught,b:s.partial})}</div></div>`);
   const kpisHtml = cells.length?`<div class="kpis" style="margin-top:${s.prio?'14px':'0'}">${cells.join('')}</div>`:'';
   return `<div class="panel"><h2>${title}</h2>${prioHtml}${kpisHtml}</div>`;
 }
@@ -707,7 +874,7 @@ function scenarioPanelCohort(records){
     const hp  = g.runs.filter(r=>r.run && r.run.endReason && r.run.endReason!=='completed').length;
     return `<tr>
       <td>${esc(g.title)}</td>
-      <td><span class="vbadge ${g.variant}">${VARIANTS[g.variant]||g.variant||'—'}</span></td>
+      <td><span class="vbadge ${g.variant}">${varLabel(g.variant)}</span></td>
       <td class="num">${g.runs.length}</td>
       <td class="num">${ppl}</td>
       <td class="num">${av!=null?av:'—'}</td>
@@ -715,9 +882,9 @@ function scenarioPanelCohort(records){
       <td class="num">${hp||''}</td>
     </tr>`;
   }).join('');
-  return `<div class="panel"><h2>Per scenario (${groups.length})</h2>
+  return `<div class="panel"><h2>${t('perScenario',{n:groups.length})}</h2>
     <table class="data"><thead><tr>
-      <th>Scenario</th><th>Variant</th><th>Runs</th><th>Deelnemers</th><th>Gem. score</th><th>Binnen normtijd</th><th>Hold-points</th>
+      <th>${t('th.scenario')}</th><th>${t('th.variant')}</th><th>${t('kpi.runs')}</th><th>${t('th.participants')}</th><th>${t('kpi.avgScore')}</th><th>${t('th.withinNorm')}</th><th>${t('th.holdpoints')}</th>
     </tr></thead><tbody>${rows}</tbody></table></div>`;
 }
 function scenarioPanelPerson(runs){
@@ -729,16 +896,16 @@ function scenarioPanelPerson(runs){
     const b = behavOf(g.runs[g.runs.length-1]);
     return `<tr>
       <td>${esc(g.title)}</td>
-      <td><span class="vbadge ${g.variant}">${VARIANTS[g.variant]||g.variant||'—'}</span></td>
+      <td><span class="vbadge ${g.variant}">${varLabel(g.variant)}</span></td>
       <td class="num">${g.runs.length}</td>
       <td class="num">${trend}</td>
       <td class="num">${normPct(g.runs)}</td>
-      <td>${b?`<span class="chip ${b}">${BEHAV[b].label}</span>`:'—'}</td>
+      <td>${b?`<span class="chip ${b}">${behavLabel(b)}</span>`:'—'}</td>
     </tr>`;
   }).join('');
-  return `<div class="panel"><h2>Per scenario (${groups.length})</h2>
+  return `<div class="panel"><h2>${t('perScenario',{n:groups.length})}</h2>
     <table class="data"><thead><tr>
-      <th>Scenario</th><th>Variant</th><th>Runs</th><th>Score (eerste → laatste)</th><th>Binnen normtijd</th><th>Niveau</th>
+      <th>${t('th.scenario')}</th><th>${t('th.variant')}</th><th>${t('kpi.runs')}</th><th>${t('th.firstLast')}</th><th>${t('th.withinNorm')}</th><th>${t('th.level')}</th>
     </tr></thead><tbody>${rows}</tbody></table></div>`;
 }
 
@@ -747,7 +914,7 @@ function loadXLSX(cb){
   if (typeof XLSX!=='undefined') return cb();
   const s=document.createElement('script');
   s.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
-  s.onload=cb; s.onerror=()=>flash('Excel-bibliotheek kon niet geladen worden (internet nodig).','red');
+  s.onload=cb; s.onerror=()=>flash(t('export.xlsxFail'),'red');
   document.head.appendChild(s);
 }
 function prioCell(p){ if(!p) return ''; return `${p.done||0}/${p.total||0}`; }
@@ -755,38 +922,51 @@ function runRow(r){
   const a=r.assessment||{}; const comp={};
   (a.competencies||[]).forEach(c=>{ const k=canonDim(c.name); if(k&&typeof c.score==='number') comp[k]=c.score; });
   const b=behavOf(r); const m=r.metrics||{}; const pr=m.prioritisation;
-  return {
-    Datum:fmtDate(dateOf(r)), Deelnemer:(r.participant&&r.participant.name)||'', Functie:(r.participant&&r.participant.role)||'',
-    Organisatie:(r.participant&&r.participant.org)||'', Variant:VARIANTS[r.variant]||r.variant||'',
-    Scenario:(r.scenario&&(r.scenario.title||r.scenario.id))||'', Type:(r.scenario&&r.scenario.type)||'',
-    'Duur (mm:ss)':fmtDur(r.run&&r.run.durationSec), Uitkomst:(r.run&&r.run.endReason)||'',
-    'Score (1-10)':scoreOf(r)??'', Gedragsniveau:b?BEHAV[b].label:'',
-    'Communicatie (1-10)':a.communicationScore??'',
-    Situatiebewustzijn:comp.situational??'', Communicatie:comp.communication??'',
-    Prioriteitstelling:comp.prioritisation??'', 'Procedure-opvolging':comp.procedure??'', 'Veilig werken':comp.safe??'',
-    'Must voltooid':pr?prioCell(pr.must):'', 'Should voltooid':pr?prioCell(pr.should):'', 'Could voltooid':pr?prioCell(pr.could):'',
-    'LMRA voltooid':(m.lmra&&m.lmra.total>0)?(m.lmra.completed?'ja':'nee'):'',
-    'Signaal opgemerkt':m.imperfectionsCaught??'', 'Signaal juist geduid':m.imperfectionsInterpreted??'',
-    Samenvatting:(a.summary||'').replace(/\s+/g,' ').slice(0,300)
-  };
+  const row={};
+  row[t('th.date')]=fmtDate(dateOf(r));
+  row[t('th.participant')]=(r.participant&&r.participant.name)||'';
+  row[t('col.function')]=(r.participant&&r.participant.role)||'';
+  row[t('th.org')]=(r.participant&&r.participant.org)||'';
+  row[t('th.variant')]=varLabel(r.variant);
+  row[t('th.scenario')]=(r.scenario&&(r.scenario.title||r.scenario.id))||'';
+  row[t('col.type')]=(r.scenario&&r.scenario.type)||'';
+  row[t('col.duration')]=fmtDur(r.run&&r.run.durationSec);
+  row[t('th.outcome')]=(r.run&&r.run.endReason)||'';
+  row[t('col.score')]=scoreOf(r)??'';
+  row[t('col.level')]=b?behavLabel(b):'';
+  row[t('col.comm')]=a.communicationScore??'';
+  row[dimLabel('situational')]=comp.situational??'';
+  row[dimLabel('communication')]=comp.communication??'';
+  row[dimLabel('prioritisation')]=comp.prioritisation??'';
+  row[dimLabel('procedure')]=comp.procedure??'';
+  row[dimLabel('safe')]=comp.safe??'';
+  row[t('col.mustDone')]=pr?prioCell(pr.must):'';
+  row[t('col.shouldDone')]=pr?prioCell(pr.should):'';
+  row[t('col.couldDone')]=pr?prioCell(pr.could):'';
+  row[t('col.lmraDone')]=(m.lmra&&m.lmra.total>0)?(m.lmra.completed?t('yes'):t('no')):'';
+  row[t('col.signalNoticed')]=m.imperfectionsCaught??'';
+  row[t('col.signalInterpreted')]=m.imperfectionsInterpreted??'';
+  row[t('col.summary')]=(a.summary||'').replace(/\s+/g,' ').slice(0,300);
+  return row;
 }
 function sheetFrom(rows, name, fname){
   loadXLSX(()=>{
     const wb=XLSX.utils.book_new();
     const ws=XLSX.utils.json_to_sheet(rows);
-    ws['!cols']=Object.keys(rows[0]||{Datum:1}).map(k=>({wch: k==='Samenvatting'?60: k==='Scenario'?30: ['Deelnemer','Organisatie','Functie'].includes(k)?22:14}));
+    const WIDE=[t('col.summary')], MED=[t('th.scenario'),t('th.participant'),t('th.org'),t('col.function')];
+    ws['!cols']=Object.keys(rows[0]||{x:1}).map(k=>({wch: WIDE.includes(k)?60: MED.includes(k)?24:14}));
     XLSX.utils.book_append_sheet(wb, ws, name.slice(0,31));
     XLSX.writeFile(wb, fname);
   });
 }
 function exportCohortExcel(){
   const rows=filteredRecords().map(runRow);
-  if (!rows.length) return flash('Geen runs om te exporteren.','amber');
-  sheetFrom(rows, 'Runs', `Bekwaamheidsdossier_cohort_${new Date().toISOString().slice(0,10)}.xlsx`);
+  if (!rows.length) return flash(t('export.none'),'amber');
+  sheetFrom(rows, t('app.title'), `${t('app.title').replace(/\s+/g,'_')}_cohort_${new Date().toISOString().slice(0,10)}.xlsx`);
 }
 function exportPersonExcel(){
   const p=peopleIndex().find(x=>x.key===STATE.selectedPersonKey); if(!p) return;
-  sheetFrom(p.runs.map(runRow), p.name.slice(0,28), `Dossier_${p.name.replace(/\s+/g,'_')}_${new Date().toISOString().slice(0,10)}.xlsx`);
+  sheetFrom(p.runs.map(runRow), p.name.slice(0,28), `${(p.name||'dossier').replace(/\s+/g,'_')}_${new Date().toISOString().slice(0,10)}.xlsx`);
 }
 
 function printHTML(title, inner){
@@ -800,9 +980,9 @@ function printHTML(title, inner){
     .r{color:#c0392b}.a{color:#c08a00}.b{color:#1f78b4}.g{color:#1e8449}
     .flag{background:#fff6e0;border:1px solid #e0b000;border-left:3px solid #e0b000;padding:8px 12px;border-radius:6px;margin-top:8px}
     @media print{.noprint{display:none}}`;
-  const html = `<!doctype html><html><head><meta charset="utf-8"><title>${esc(title)}</title><style>${css}</style></head>
+  const html = `<!doctype html><html lang="${LANG}"><head><meta charset="utf-8"><title>${esc(title)}</title><style>${css}</style></head>
     <body>${inner}<script>window.addEventListener('load',()=>setTimeout(()=>{try{window.print()}catch(e){}},300));<\/script></body></html>`;
-  const w=window.open('','_blank'); if(!w){ flash('Pop-up geblokkeerd — sta pop-ups toe voor de PDF.','amber'); return; }
+  const w=window.open('','_blank'); if(!w){ flash(t('pdf.popup'),'amber'); return; }
   w.document.open(); w.document.write(html); w.document.close();
 }
 const PCLS={reactive:'r',aware:'a',proactive:'b','in-control':'g'};
@@ -812,46 +992,48 @@ function exportPersonPDF(){
   const scores=runs.map(scoreOf).filter(x=>x!=null);
   const series=personDimSeries(runs);
   const dimHtml=DIMENSIONS.map(d=>{const s=series[d.key]; if(!s.length)return''; const av=avg(s.map(x=>x.val));
-    return `<tr><td>${d.label}</td><td>${round1(av)} / 5</td><td>${round1(s[0].val)} → ${round1(s[s.length-1].val)}</td></tr>`;}).filter(Boolean).join('');
+    return `<tr><td>${dimLabel(d.key)}</td><td>${round1(av)} / 5</td><td>${round1(s[0].val)} → ${round1(s[s.length-1].val)}</td></tr>`;}).filter(Boolean).join('');
   const rowsHtml=runs.slice().reverse().map(r=>{const b=behavOf(r);
-    return `<tr><td>${fmtDate(dateOf(r))}</td><td>${VARIANTS[r.variant]||r.variant||''}</td><td>${esc((r.scenario&&r.scenario.title)||'')}</td>
-      <td>${fmtDur(r.run&&r.run.durationSec)}</td><td>${(r.run&&r.run.endReason!=='completed')?'hold-point':'voltooid'}</td>
-      <td>${scoreOf(r)??'—'}</td><td class="${PCLS[b]||''}">${b?BEHAV[b].label:'—'}</td></tr>`;}).join('');
-  const inner=`<h1>Bekwaamheidsdossier — ${esc(p.name)}</h1>
-    <div class="sub">${esc([p.role,p.org].filter(Boolean).join(' · '))} · gegenereerd ${fmtDate(new Date().toISOString())}</div>
-    <div class="kpi"><b>${runs.length}</b>runs</div>
-    <div class="kpi"><b>${round1(avg(scores))??'—'}</b>gem. score /10</div>
-    <div class="kpi"><b class="${PCLS[bl]||''}">${bl?BEHAV[bl].label:'—'}</b>huidig niveau</div>
-    <div class="kpi"><b>${fmtDate(dateOf(runs[0]))}<br>${fmtDate(dateOf(last))}</b>periode</div>
-    <h2>Competentie-ontwikkeling (eerste → laatste)</h2>
-    <table><tr><th>Dimensie</th><th>Gemiddeld</th><th>Verloop</th></tr>${dimHtml||'<tr><td colspan=3>Geen competentie-scores.</td></tr>'}</table>
-    <h2>Runs (${runs.length})</h2>
-    <table><tr><th>Datum</th><th>Variant</th><th>Scenario</th><th>Duur</th><th>Uitkomst</th><th>Score</th><th>Niveau</th></tr>${rowsHtml}</table>`;
-  printHTML('Dossier '+p.name, inner);
+    return `<tr><td>${fmtDate(dateOf(r))}</td><td>${varLabel(r.variant)}</td><td>${esc((r.scenario&&r.scenario.title)||'')}</td>
+      <td>${fmtDur(r.run&&r.run.durationSec)}</td><td>${(r.run&&r.run.endReason!=='completed')?t('out.holdpoint'):t('out.completed')}</td>
+      <td>${scoreOf(r)??'—'}</td><td class="${PCLS[b]||''}">${behavLabel(b)}</td></tr>`;}).join('');
+  const inner=`<h1>${t('pdf.dossierTitle',{name:esc(p.name)})}</h1>
+    <div class="sub">${esc([p.role,p.org].filter(Boolean).join(' · '))} · ${t('pdf.generated',{d:fmtDate(new Date().toISOString())})}</div>
+    <div class="kpi"><b>${runs.length}</b>${t('stats.runs')}</div>
+    <div class="kpi"><b>${round1(avg(scores))??'—'}</b>${t('pdf.avgScore10')}</div>
+    <div class="kpi"><b class="${PCLS[bl]||''}">${behavLabel(bl)}</b>${t('detail.currentLevel')}</div>
+    <div class="kpi"><b>${fmtDate(dateOf(runs[0]))}<br>${fmtDate(dateOf(last))}</b>${t('pdf.period')}</div>
+    <h2>${t('pdf.compDevFL')}</h2>
+    <table><tr><th>${t('th.dimension')}</th><th>${t('th.average')}</th><th>${t('th.trend')}</th></tr>${dimHtml||`<tr><td colspan=3>${t('pdf.noComp')}</td></tr>`}</table>
+    <h2>${t('panel.runsN',{n:runs.length})}</h2>
+    <table><tr><th>${t('th.date')}</th><th>${t('th.variant')}</th><th>${t('th.scenario')}</th><th>${t('th.duration')}</th><th>${t('th.outcome')}</th><th>${t('th.score')}</th><th>${t('th.level')}</th></tr>${rowsHtml}</table>`;
+  printHTML(t('pdf.dossierTitle',{name:p.name}), inner);
 }
 function exportCohortPDF(){
-  const recs=filteredRecords(); if(!recs.length) return flash('Geen runs om te exporteren.','amber');
+  const recs=filteredRecords(); if(!recs.length) return flash(t('export.none'),'amber');
   const people=new Set(recs.map(personKey)); const scores=recs.map(scoreOf).filter(x=>x!=null);
   const holdPts=recs.filter(r=>r.run&&r.run.endReason&&r.run.endReason!=='completed').length;
   const dimVals={}; DIMENSIONS.forEach(d=>dimVals[d.key]=[]);
   recs.forEach(r=>((r.assessment&&r.assessment.competencies)||[]).forEach(c=>{const k=canonDim(c.name);if(k&&typeof c.score==='number')dimVals[k].push(c.score);}));
-  const dimAvg=DIMENSIONS.map(d=>({...d,av:avg(dimVals[d.key]),n:dimVals[d.key].length})).filter(d=>d.n>0);
+  const dimAvg=DIMENSIONS.map(d=>({key:d.key,av:avg(dimVals[d.key]),n:dimVals[d.key].length})).filter(d=>d.av!=null);
   const weakest=dimAvg.slice().sort((a,b)=>a.av-b.av)[0];
-  const dimHtml=dimAvg.map(d=>`<tr><td>${d.label}</td><td>${round1(d.av)} / 5</td><td>${d.n}</td></tr>`).join('');
-  const fdesc=[['Organisatie',$('f-org').value],['Variant',VARIANTS[$('f-variant').value]||$('f-variant').value],['Scenario',$('f-scenario').value],['Vanaf',$('f-from').value],['Tot',$('f-to').value]].filter(x=>x[1]).map(x=>x[0]+': '+x[1]).join(' · ')||'alle runs';
-  const inner=`<h1>Cohort-rapport — bekwaamheid</h1>
-    <div class="sub">Filter: ${esc(fdesc)} · gegenereerd ${fmtDate(new Date().toISOString())}</div>
-    <div class="kpi"><b>${recs.length}</b>runs</div>
-    <div class="kpi"><b>${people.size}</b>deelnemers</div>
-    <div class="kpi"><b>${round1(avg(scores))??'—'}</b>gem. score /10</div>
-    <div class="kpi"><b>${holdPts}</b>hold-points</div>
-    <h2>Competentie-gemiddelden</h2>
-    <table><tr><th>Dimensie</th><th>Gemiddeld</th><th>Metingen</th></tr>${dimHtml||'<tr><td colspan=3>Geen scores.</td></tr>'}</table>
-    ${weakest?`<div class="flag">⚠ Vroegsignalering: laagste score op <b>${weakest.label}</b> (gem. ${round1(weakest.av)}/5).</div>`:''}`;
-  printHTML('Cohort-rapport', inner);
+  const dimHtml=dimAvg.map(d=>`<tr><td>${dimLabel(d.key)}</td><td>${round1(d.av)} / 5</td><td>${d.n}</td></tr>`).join('');
+  const fdesc=[[t('f.org'),$('f-org').value],[t('f.variant'),varLabel($('f-variant').value)],[t('f.scenario'),$('f-scenario').value],[t('f.from'),$('f-from').value],[t('f.to'),$('f-to').value]].filter(x=>x[1]).map(x=>x[0]+': '+x[1]).join(' · ')||t('pdf.allRuns');
+  const inner=`<h1>${t('pdf.cohortTitle')}</h1>
+    <div class="sub">${t('pdf.filter',{f:esc(fdesc),d:fmtDate(new Date().toISOString())})}</div>
+    <div class="kpi"><b>${recs.length}</b>${t('stats.runs')}</div>
+    <div class="kpi"><b>${people.size}</b>${t('stats.participants')}</div>
+    <div class="kpi"><b>${round1(avg(scores))??'—'}</b>${t('pdf.avgScore10')}</div>
+    <div class="kpi"><b>${holdPts}</b>${t('th.holdpoints')}</div>
+    <h2>${t('pdf.compAvg')}</h2>
+    <table><tr><th>${t('th.dimension')}</th><th>${t('th.average')}</th><th>${t('th.measurements')}</th></tr>${dimHtml||`<tr><td colspan=3>${t('pdf.noScores')}</td></tr>`}</table>
+    ${weakest?`<div class="flag">${t('pdf.weakFlag',{dim:dimLabel(weakest.key),v:round1(weakest.av)})}</div>`:''}`;
+  printHTML(t('pdf.cohortTitle'), inner);
 }
 
 /* init */
+document.querySelectorAll('.lang-btn').forEach(b=>b.classList.toggle('active', b.dataset.lang===LANG));
+applyStaticI18n();
 refreshAll();
 </script>
 </body>
