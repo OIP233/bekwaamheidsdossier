@@ -353,7 +353,7 @@ function refreshAll(){
 function updateTopStats(){
   const recs = STATE.records;
   const people = new Set(recs.map(personKey));
-  const scen = new Set(recs.map(r=>r.scenario && r.scenario.id).filter(Boolean));
+  const scen = new Set(recs.map(r=>r.scenario && (r.scenario.id || r.scenario.title)).filter(Boolean));
   $('topstats').textContent = recs.length
     ? `${recs.length} runs · ${people.size} deelnemers · ${scen.size} scenario's`
     : '';
@@ -476,7 +476,7 @@ function renderPersonDetail(){
         <div class="kpi"><div class="v">${runs.length}</div><div class="l">Runs</div><div class="sub">${esc(period)}</div></div>
         <div class="kpi"><div class="v">${avgScore!=null?avgScore:'—'}</div><div class="l">Gem. score</div><div class="sub">laatste: ${scoreOf(last)!=null?scoreOf(last)+'/10':'—'}</div></div>
         <div class="kpi"><div class="v">${holdPts}</div><div class="l">Hold-points</div><div class="sub">vroegtijdig gestopt</div></div>
-        <div class="kpi"><div class="v">${new Set(runs.map(r=>r.scenario&&r.scenario.id).filter(Boolean)).size}</div><div class="l">Scenario's</div><div class="sub">verschillende</div></div>
+        <div class="kpi"><div class="v">${new Set(runs.map(r=>r.scenario&&(r.scenario.id||r.scenario.title)).filter(Boolean)).size}</div><div class="l">Scenario's</div><div class="sub">verschillende</div></div>
       </div>
     </div>
 
@@ -498,6 +498,8 @@ function renderPersonDetail(){
     </div>
 
     ${disciplinePanel(runs, 'Prioritering & discipline')}
+
+    ${scenarioPanelPerson(runs)}
 
     <div class="panel">
       <h2>Runs (${runs.length})</h2>
@@ -592,7 +594,7 @@ function renderCohort(){
     <div class="kpi"><div class="v">${people.size}</div><div class="l">Deelnemers</div></div>
     <div class="kpi"><div class="v">${round1(avg(scores))??'—'}</div><div class="l">Gem. score</div><div class="sub">van 10</div></div>
     <div class="kpi"><div class="v">${holdPts}</div><div class="l">Hold-points</div><div class="sub">${(holdPts/recs.length*100).toFixed(0)}% van runs</div></div>
-    <div class="kpi"><div class="v">${normRuns.length?Math.round(withinNorm/normRuns.length*100)+'%':'—'}</div><div class="l">Binnen norm</div><div class="sub">${normRuns.length} runs gemeten</div></div>
+    <div class="kpi" title="Norm = de doelstelling die de scenario-auteur per scenario instelt: bij een procedureel scenario de normtijd (totale duur), bij een incident de reactietijd-target (time-to-first-action). Een run telt 'binnen norm' als hij die haalt. Runs zonder ingestelde norm (o.a. CRO) tellen niet mee in deze noemer."><div class="v">${normRuns.length?Math.round(withinNorm/normRuns.length*100)+'%':'—'}</div><div class="l">Binnen normtijd</div><div class="sub">${normRuns.length} van ${recs.length} runs met norm</div></div>
   </div></div>`;
 
   // Behaviour bar
@@ -640,7 +642,7 @@ function renderCohort(){
       <button class="btn" onclick="exportCohortExcel()">⬇ Excel (alle runs)</button>
     </div></div>`;
 
-  body.innerHTML = kpis + behavPanel + dimPanel + disciplinePanel(recs, 'Prioritering & discipline (cohort)') + personPanel;
+  body.innerHTML = kpis + behavPanel + dimPanel + disciplinePanel(recs, 'Prioritering & discipline (cohort)') + scenarioPanelCohort(recs) + personPanel;
 }
 
 /* ═══════════ PRIORITERING & DISCIPLINE (WP2) ═══════════ */
@@ -677,6 +679,67 @@ function disciplinePanel(records, title){
   if (s.caught>0) cells.push(`<div class="kpi"><div class="v">${s.interpreted}</div><div class="l">Signaal juist geduid</div><div class="sub">${s.caught} opgemerkt · ${s.partial} deels</div></div>`);
   const kpisHtml = cells.length?`<div class="kpis" style="margin-top:${s.prio?'14px':'0'}">${cells.join('')}</div>`:'';
   return `<div class="panel"><h2>${title}</h2>${prioHtml}${kpisHtml}</div>`;
+}
+
+/* ═══════════ PER SCENARIO ═══════════ */
+function scenKey(r){ return (r.scenario && (r.scenario.id || r.scenario.title)) || '—'; }
+function scenTitle(r){ return (r.scenario && (r.scenario.title || r.scenario.id)) || '—'; }
+function scenarioBreakdown(records){
+  const map = new Map();
+  records.forEach(r=>{ const k=scenKey(r);
+    if (!map.has(k)) map.set(k, { key:k, title:scenTitle(r), variant:r.variant, runs:[] });
+    map.get(k).runs.push(r); });
+  const list = [...map.values()];
+  list.forEach(g=>g.runs.sort((a,b)=>ts(a)-ts(b)));
+  return list;
+}
+function normPct(runs){
+  const nr = runs.filter(r=>r.run && typeof r.run.withinNorm==='boolean');
+  if (!nr.length) return '—';
+  return Math.round(nr.filter(r=>r.run.withinNorm).length / nr.length * 100) + '%';
+}
+function scenarioPanelCohort(records){
+  const groups = scenarioBreakdown(records);
+  if (!groups.length) return '';
+  const rows = groups.sort((a,b)=>b.runs.length-a.runs.length).map(g=>{
+    const ppl = new Set(g.runs.map(personKey)).size;
+    const av  = round1(avg(g.runs.map(scoreOf).filter(x=>x!=null)));
+    const hp  = g.runs.filter(r=>r.run && r.run.endReason && r.run.endReason!=='completed').length;
+    return `<tr>
+      <td>${esc(g.title)}</td>
+      <td><span class="vbadge ${g.variant}">${VARIANTS[g.variant]||g.variant||'—'}</span></td>
+      <td class="num">${g.runs.length}</td>
+      <td class="num">${ppl}</td>
+      <td class="num">${av!=null?av:'—'}</td>
+      <td class="num">${normPct(g.runs)}</td>
+      <td class="num">${hp||''}</td>
+    </tr>`;
+  }).join('');
+  return `<div class="panel"><h2>Per scenario (${groups.length})</h2>
+    <table class="data"><thead><tr>
+      <th>Scenario</th><th>Variant</th><th>Runs</th><th>Deelnemers</th><th>Gem. score</th><th>Binnen normtijd</th><th>Hold-points</th>
+    </tr></thead><tbody>${rows}</tbody></table></div>`;
+}
+function scenarioPanelPerson(runs){
+  if (runs.length <= 1) return '';
+  const groups = scenarioBreakdown(runs);
+  const rows = groups.sort((a,b)=>b.runs.length-a.runs.length).map(g=>{
+    const sc = g.runs.map(scoreOf).filter(x=>x!=null);
+    const trend = sc.length>1 ? `${sc[0]} → ${sc[sc.length-1]}` : (sc.length?String(sc[0]):'—');
+    const b = behavOf(g.runs[g.runs.length-1]);
+    return `<tr>
+      <td>${esc(g.title)}</td>
+      <td><span class="vbadge ${g.variant}">${VARIANTS[g.variant]||g.variant||'—'}</span></td>
+      <td class="num">${g.runs.length}</td>
+      <td class="num">${trend}</td>
+      <td class="num">${normPct(g.runs)}</td>
+      <td>${b?`<span class="chip ${b}">${BEHAV[b].label}</span>`:'—'}</td>
+    </tr>`;
+  }).join('');
+  return `<div class="panel"><h2>Per scenario (${groups.length})</h2>
+    <table class="data"><thead><tr>
+      <th>Scenario</th><th>Variant</th><th>Runs</th><th>Score (eerste → laatste)</th><th>Binnen normtijd</th><th>Niveau</th>
+    </tr></thead><tbody>${rows}</tbody></table></div>`;
 }
 
 /* ═══════════ EXPORTS ═══════════ */
